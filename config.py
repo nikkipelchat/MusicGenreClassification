@@ -9,7 +9,8 @@ pixelPerSecond = 50
 
 #Slice parameters
 sliceSize = 128
-sliceYSize = 256
+sliceXSize = 256
+sliceYSize = 128
 
 #Dataset parameters
 filesPerGenre = 10000

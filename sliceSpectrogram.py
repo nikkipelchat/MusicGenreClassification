@@ -5,23 +5,24 @@ import os.path
 from config import spectrogramsPath, slicesPath
 
 #Slices all spectrograms
-def createSlicesFromSpectrograms(desiredSize):
+def createSlicesFromSpectrograms(sliceXSize, sliceYSize):
 	for filename in os.listdir(spectrogramsPath):
 		if filename.endswith(".png"):
-			sliceSpectrogram(filename,desiredSize)
+			sliceSpectrogram(filename, sliceXSize, sliceYSize)
 
 #Creates slices from spectrogram
 #TODO Improvement - Make sure we don't miss the end of the song
-def sliceSpectrogram(filename, desiredSize):
+def sliceSpectrogram(filename, sliceXSize, sliceYSize):
 	genre = filename.split("_")[0] 	#Ex. Dubstep_19.png
 
 	# Load the full spectrogram
 	img = Image.open(spectrogramsPath+filename)
 
-	#Compute approximate number of 128x128 samples
+	#Compute approximate number of sizeX x sizeY samples
 	width, height = img.size
-	nbSamples = int(width/desiredSize)
-	width - desiredSize
+	nbSamples = int(width/sliceXSize)
+	width - sliceXSize
+	print("width: {}, height: {}".format(width, height))
 
 	#Create path if not existing
 	slicePath = slicesPath+"{}/".format(genre);
@@ -35,8 +36,8 @@ def sliceSpectrogram(filename, desiredSize):
 	#For each sample
 	for i in range(nbSamples):
 		print("Creating slice: ", (i+1), "/", nbSamples, "for", filename)
-		#Extract and save 128x128 sample
-		startPixel = i*desiredSize
-		imgTmp = img.crop((startPixel, 1, startPixel + desiredSize, desiredSize + 1))
+		#Extract and save sizeX x sizeY sample
+		startPixel = i*sliceXSize
+		imgTmp = img.crop((startPixel, 1, startPixel + sliceXSize, sliceYSize + 1))
 		imgTmp.save(slicesPath+"{}/{}_{}.png".format(genre,filename[:-4],i))
 

@@ -12,9 +12,7 @@ from audioFilesTools import isMono, getGenre
 from config import rawDataPath
 from config import spectrogramsPath
 from config import pixelPerSecond
-
-#Tweakable parameters
-desiredSize = 128
+from config import sliceXSize, sliceYSize
 
 #Define
 currentPath = os.path.dirname(os.path.realpath(__file__)) 
@@ -80,5 +78,5 @@ def createSlicesFromAudio():
 	print("Spectrograms created!")
 
 	print("Creating slices...")
-	createSlicesFromSpectrograms(desiredSize)
+	createSlicesFromSpectrograms(sliceXSize, sliceYSize)
 	print("Slices created!")
