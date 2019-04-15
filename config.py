@@ -9,11 +9,12 @@ pixelPerSecond = 50
 
 #Slice parameters
 sliceSize = 128
-sliceXSize = 256
+sliceXSize = 128
 sliceYSize = 128
 
 #Dataset parameters
-filesPerGenre = 10000
+filesPerGenre = 40000
+ignoreGenres = ['Classical', 'Other', 'Soundtrack']
 validationRatio = 0.3
 testRatio = 0.1
 

@@ -22,7 +22,6 @@ def sliceSpectrogram(filename, sliceXSize, sliceYSize):
 	width, height = img.size
 	nbSamples = int(width/sliceXSize)
 	width - sliceXSize
-	print("width: {}, height: {}".format(width, height))
 
 	#Create path if not existing
 	slicePath = slicesPath+"{}/".format(genre);
@@ -35,7 +34,8 @@ def sliceSpectrogram(filename, sliceXSize, sliceYSize):
 
 	#For each sample
 	for i in range(nbSamples):
-		print("Creating slice: ", (i+1), "/", nbSamples, "for", filename)
+		if i == 0:
+			print("Creating {} slices for {}: ".format(nbSamples, filename))
 		#Extract and save sizeX x sizeY sample
 		startPixel = i*sliceXSize
 		imgTmp = img.crop((startPixel, 1, startPixel + sliceXSize, sliceYSize + 1))

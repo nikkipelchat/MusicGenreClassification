@@ -13,6 +13,8 @@ import pickle
 from imageFilesTools import getImageData
 from config import datasetPath
 from config import slicesPath
+from config import ignoreGenres
+from config import spectrogramsPath
 
 #Creates name of dataset from parameters
 def getDatasetName(nbPerGenre, sliceXSize, sliceYSize):
@@ -32,7 +34,7 @@ def getDataset(nbPerGenre, genres, sliceXSize, sliceYSize, validationRatio, test
         print("[+] Using existing dataset")
     
     return loadDataset(nbPerGenre, genres, sliceXSize, sliceYSize, mode)
-        
+      
 #Loads dataset
 #Mode = "train" or "test"
 def loadDataset(nbPerGenre, genres, sliceXSize, sliceYSize, mode):
@@ -67,55 +69,90 @@ def saveDataset(train_X, train_y, validation_X, validation_y, test_X, test_y, nb
     #SaveDataset
     print("[+] Saving dataset... ")
     datasetName = getDatasetName(nbPerGenre, sliceXSize, sliceYSize)
-    pickle.dump(train_X, open("{}train_X_{}.p".format(datasetPath,datasetName), "wb" ))
-    pickle.dump(train_y, open("{}train_y_{}.p".format(datasetPath,datasetName), "wb" ))
-    pickle.dump(validation_X, open("{}validation_X_{}.p".format(datasetPath,datasetName), "wb" ))
-    pickle.dump(validation_y, open("{}validation_y_{}.p".format(datasetPath,datasetName), "wb" ))
-    pickle.dump(test_X, open("{}test_X_{}.p".format(datasetPath,datasetName), "wb" ))
-    pickle.dump(test_y, open("{}test_y_{}.p".format(datasetPath,datasetName), "wb" ))
+    pickle.dump(train_X, open("{}train_X_{}.p".format(datasetPath,datasetName), "wb" ), protocol=4)
+    pickle.dump(train_y, open("{}train_y_{}.p".format(datasetPath,datasetName), "wb" ), protocol=4)
+    pickle.dump(validation_X, open("{}validation_X_{}.p".format(datasetPath,datasetName), "wb" ), protocol=4)
+    pickle.dump(validation_y, open("{}validation_y_{}.p".format(datasetPath,datasetName), "wb" ), protocol=4)
+    pickle.dump(test_X, open("{}test_X_{}.p".format(datasetPath,datasetName), "wb" ), protocol=4)
+    pickle.dump(test_y, open("{}test_y_{}.p".format(datasetPath,datasetName), "wb" ), protocol=4)
     print("    Dataset saved!")
 
 #Creates and save dataset from slices
 def createDatasetFromSlices(nbPerGenre, genres, sliceXSize, sliceYSize, validationRatio, testRatio):
-    data = []
+    validationData = []
+    testingData = []
+    trainingData = []
+
     for genre in genres:
-        print("-> Adding {}...".format(genre))
         #Get slices in genre subfolder
         filenames = os.listdir(slicesPath+genre)
         filenames = [filename for filename in filenames if filename.endswith('.png')]
+        #If we're supposed to ignore genre, don't add to dataset
+        if any(genre in s for s in ignoreGenres):
+            print("-> Ignoring {}, {} slices".format(genre, len(filenames)))
+            continue
+        print("-> Adding {}, {} slices".format(genre, len(filenames)))
         filenames = filenames[:nbPerGenre]
+
+        #Split up files into train, test, and validate
+        #Index of array to grab validation files (amount in config) of array
+        arrayIndexForValidation = int(len(filenames)*validationRatio)
+        #Index of array to grab test files (amount in config) of array
+        arrayIndexForTest = int(len(filenames)*testRatio)
+        #Index of array to grab the rest of array
+        arrayIndexForTrain = int(len(filenames)*validationRatio)
+
+        fileNameArraySplit = np.split(filenames, [arrayIndexForValidation, arrayIndexForTest + arrayIndexForValidation])
+
+        validationFilenames = fileNameArraySplit[0]
+        testFilenames = fileNameArraySplit[1]
+        trainingFilenames = fileNameArraySplit[2]
+        
         #Randomize file selection for this genre
-        shuffle(filenames)
+        shuffle(validationFilenames)
+        shuffle(testFilenames)
+        shuffle(trainingFilenames)
 
         #Add data (X,y)
-        for filename in filenames:
-            imgData = getImageData(slicesPath+genre+"/"+filename, sliceXSize, sliceYSize)
+        for validationFilename in validationFilenames:
+            imgData = getImageData(slicesPath+genre+"/"+validationFilename, sliceXSize, sliceYSize)
             label = [1. if genre == g else 0. for g in genres]
-            data.append((imgData,label))
+            validationData.append((imgData,label))
+
+        for testFilename in testFilenames:
+            imgData = getImageData(slicesPath+genre+"/"+testFilename, sliceXSize, sliceYSize)
+            label = [1. if genre == g else 0. for g in genres]
+            testingData.append((imgData,label))
+
+        for trainingFilename in trainingFilenames:
+            imgData = getImageData(slicesPath+genre+"/"+trainingFilename, sliceXSize, sliceYSize)
+            label = [1. if genre == g else 0. for g in genres]
+            trainingData.append((imgData,label))
 
     #Shuffle data
-    shuffle(data)
+    shuffle(validationData)
+    shuffle(testingData)
+    shuffle(trainingData)
+        
+    print("----------------")
+    print("Total dataset {}".format(len(trainingData) + len(validationData) + len(testingData)))
+    print("Split up into Training: {};  Validation: {};  Test: {};".format(len(trainingData), len(validationData), len(testingData)))
 
     #Extract X and y
-    X,y = zip(*data)
+    validate_X,validate_Y = zip(*validationData)
+    test_X,test_Y = zip(*testingData)
+    train_X,train_Y = zip(*trainingData)
 
-    #Split data
-    validationNb = int(len(X)*validationRatio)
-    testNb = int(len(X)*testRatio)
-    trainNb = len(X)-(validationNb + testNb)
-    print("----------------")
-    print("Total dataset {}".format(len(X)))
-    print("Split up into Training: {};  Validation: {};  Test: {};".format(trainNb, validationNb, testNb))
-    #Prepare for Tflearn at the same time
-    train_X = np.array(X[:trainNb]).reshape([-1, sliceXSize, sliceYSize, 1])
-    train_y = np.array(y[:trainNb])
-    validation_X = np.array(X[trainNb:trainNb+validationNb]).reshape([-1, sliceXSize, sliceYSize, 1])
-    validation_y = np.array(y[trainNb:trainNb+validationNb])
-    test_X = np.array(X[-testNb:]).reshape([-1, sliceXSize, sliceYSize, 1])
-    test_y = np.array(y[-testNb:])
+    #Prepare for Tflearn
+    train_X = np.array(train_X).reshape([-1, sliceXSize, sliceYSize, 1])
+    train_Y = np.array(train_Y)
+    validation_X = np.array(validate_X).reshape([-1, sliceXSize, sliceYSize, 1])
+    validation_Y = np.array(validate_Y)
+    test_X = np.array(test_X).reshape([-1, sliceXSize, sliceYSize, 1])
+    test_Y = np.array(test_Y)
     print("    Dataset created!")
         
     #Save
-    saveDataset(train_X, train_y, validation_X, validation_y, test_X, test_y, nbPerGenre, genres, sliceXSize, sliceYSize)
+    saveDataset(train_X, train_Y, validation_X, validation_Y, test_X, test_Y, nbPerGenre, genres, sliceXSize, sliceYSize)
 
-    return train_X, train_y, validation_X, validation_y, test_X, test_y
+    return train_X, train_Y, validation_X, validation_Y, test_X, test_Y

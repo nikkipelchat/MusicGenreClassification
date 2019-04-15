@@ -4,6 +4,7 @@ import os
 from PIL import Image
 import eyed3
 import sys
+import re
 print(sys.executable)
 print(sys.version)
 
@@ -31,16 +32,16 @@ def createSpectrogram(filename,newFilename):
 	output, errors = p.communicate()
 	if errors:
 		print(errors)
-	print("Made mono file")
+	#print("Made mono file")
 
 	#Create spectrogram
 	filename.replace(".mp3","")
-	command = 'sox "/tmp/{}.mp3" -n spectrogram -Y 200 -X {} -m -r -o "{}.png"'.format(newFilename,pixelPerSecond,spectrogramsPath+newFilename)
+	command = 'sox "/tmp/{}.mp3" -n spectrogram -w Hamming -Y 200 -X {} -m -r -o "{}.png"'.format(newFilename,pixelPerSecond,spectrogramsPath+newFilename)
 	p = Popen(command, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, cwd=currentPath)
 	output, errors = p.communicate()
 	if errors:
 		print(errors)
-	print("Made sprectrogram")
+	#print("Made sprectrogram")
 
 	#Remove tmp mono track
 	os.remove("/tmp/{}.mp3".format(newFilename))
@@ -51,7 +52,6 @@ def createSpectrogramsFromAudio():
 	files = os.listdir(rawDataPath)
 	files = [file for file in files if file.endswith(".mp3")]
 	nbFiles = len(files)
-	print(nbFiles)
 
 	#Create path if not existing
 	if not os.path.exists(os.path.dirname(spectrogramsPath)):
@@ -63,11 +63,16 @@ def createSpectrogramsFromAudio():
 
 	#Rename files according to genre
 	for index,filename in enumerate(files):
-		print("Creating spectrogram for file {}/{}...".format(index+1,nbFiles))
+		#Rename file before finding genre
+		#Strip out any special characters
+		os.rename(rawDataPath+filename, rawDataPath+re.sub('[^A-Za-z0-9. ]+', '',filename))
+		filename = re.sub('[^A-Za-z0-9. ]+', '', filename)
+		
+		print("Creating spectrogram for file {}/{}...  {}".format(index+1,nbFiles,filename))
+
 		fileGenre = getGenre(rawDataPath+filename)
 		genresID[fileGenre] = genresID[fileGenre] + 1 if fileGenre in genresID else 1
 		fileID = genresID[fileGenre]
-		print('filegenre', fileGenre)
 		newFilename = fileGenre+"_"+str(fileID) #if fileGenre is byte then do this 
 		createSpectrogram(filename,newFilename)
 
