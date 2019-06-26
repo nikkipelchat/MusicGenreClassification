@@ -23,11 +23,17 @@ def createModel(nbClasses, imageSizeX, imageSizeY):
 	convnet = conv_2d(convnet, 512, 2, activation='relu', weights_init="Xavier")
 	convnet = max_pool_2d(convnet, 2)
 
-	convnet = fully_connected(convnet, 1024, activation='relu')
+	convnet = conv_2d(convnet, 1024, 2, activation='relu', weights_init="Xavier")
+	convnet = max_pool_2d(convnet, 2)
+
+	convnet = conv_2d(convnet, 2048, 2, activation='relu', weights_init="Xavier")
+	convnet = max_pool_2d(convnet, 2)
+
+	convnet = fully_connected(convnet, 4096, activation='relu')
 	convnet = dropout(convnet, 0.5)
 
 	convnet = fully_connected(convnet, nbClasses, activation='softmax')
-	convnet = regression(convnet, optimizer='rmsprop', loss='categorical_crossentropy')
+	convnet = regression(convnet, optimizer='adam', loss='categorical_crossentropy')
 
 	model = tflearn.DNN(convnet)
 	print("    Model created!")

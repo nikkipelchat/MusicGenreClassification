@@ -2,9 +2,11 @@
 import random
 import string
 import os
+import time
 import sys
 import numpy as np
 import tensorflow as tf
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' # only log errors
 
 from model import createModel
 from datasetTools import getDataset
@@ -61,7 +63,12 @@ if "train" in args.mode:
 
 	#Train the model
 	print("[+] Training the model...")
+	t0 = time.gmtime()
 	history = model.fit(train_X, train_y, n_epoch=nbEpoch, batch_size=batchSize, shuffle=True, validation_set=(validation_X, validation_y), snapshot_step=100, show_metric=True, run_id=run_id)
+	t1 = time.gmtime()
+	secondsToTrain = time.mktime(t1) - time.mktime(t0)
+	hours, minutes = divmod(secondsToTrain, 3600)
+	print("[+]: Time to train: {} hours, {:.0f} minutes".format(hours, minutes/60))
 	print("[+] History: {}".format(history))
 	print("    Model trained!")
 
@@ -73,7 +80,7 @@ if "train" in args.mode:
 	print("[+] Test Neural Network")
 	test_X, test_y = getDataset(filesPerGenre, genres, sliceXSize, sliceYSize, validationRatio, testRatio, mode="test")
 
-	
+
 	print("[+] Loading weights...")
 	model.load('musicDNN.tflearn')
 	print("    Weights loaded!")
@@ -105,14 +112,14 @@ if "test" in args.mode:
 	# print("Prediction: %s" % str(prediction[0][:8]))
 
 	#Evaluate 1
-	predictions = model.predict(test_X)#[test_X[0], test_X[1], test_X[2], test_X[3], test_X[4], test_X[5], test_X[6], test_X[7], test_X[8], test_X[9], test_X[10]])
-	accuracy = 0
-	for prediction, actual in zip(predictions, test_y): #[test_y[0], test_y[1], test_y[2], test_y[3], test_y[4], test_y[5], test_y[6], test_y[7], test_y[8], test_y[9], test_y[10]]):
-		predicted_class = np.argmax(prediction)
-		actual_class = np.argmax(actual)
-		print("Predicted: {} and actual: {}".format(predicted_class, actual_class))
-		if(predicted_class == actual_class):
-			accuracy+=1
+	# predictions = model.predict(test_X)#[test_X[0], test_X[1], test_X[2], test_X[3], test_X[4], test_X[5], test_X[6], test_X[7], test_X[8], test_X[9], test_X[10]])
+	# accuracy = 0
+	# for prediction, actual in zip(predictions, test_y): #[test_y[0], test_y[1], test_y[2], test_y[3], test_y[4], test_y[5], test_y[6], test_y[7], test_y[8], test_y[9], test_y[10]]):
+	# 	predicted_class = np.argmax(prediction)
+	# 	actual_class = np.argmax(actual)
+	# 	print("Predicted: {} and actual: {}".format(predicted_class, actual_class))
+	# 	if(predicted_class == actual_class):
+	# 		accuracy+=1
 
 	# accuracy = accuracy / len(test_y)
 	# print("[+] Test accuracy 1: {} ".format(accuracy))
@@ -120,7 +127,7 @@ if "test" in args.mode:
 
 	#Evaluate 2
 	testAccuracy = model.evaluate(test_X, test_y)[0]
-	print("[+] Test accuracy 2: {} ".format(testAccuracy))
+	print("[+] Test accuracy: {:.2%}".format(testAccuracy))
 
 
 
