@@ -36,7 +36,8 @@ def createSpectrogram(filename,newFilename):
 
 	#Create spectrogram
 	filename.replace(".mp3","")
-	command = 'sox "/tmp/{}.mp3" -n spectrogram -w Hamming -Y 200 -X {} -m -r -o "{}.png"'.format(newFilename,pixelPerSecond,spectrogramsPath+newFilename)
+	# trim 20 will cut 20 seconds off front of song
+	command = 'sox "/tmp/{}.mp3" -n trim 20 spectrogram -w Hamming -Y 200 -X {} -m -r -o "{}.png"'.format(newFilename,pixelPerSecond,spectrogramsPath+newFilename)
 	p = Popen(command, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, cwd=currentPath)
 	output, errors = p.communicate()
 	if errors:

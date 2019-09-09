@@ -12,7 +12,7 @@ from model import createModel
 from datasetTools import getDataset
 from config import slicesPath
 from config import batchSize
-from config import filesPerGenre
+from config import filesPerGenreMap
 from config import nbEpoch
 from config import validationRatio, testRatio
 from config import sliceSize, sliceXSize, sliceYSize
@@ -46,7 +46,7 @@ print("| Genres: {}".format(genres))
 nbClasses = len(genres)
 
 print("| Number of classes: {}".format(nbClasses))
-print("| Slices per genre: {}".format(filesPerGenre))
+print("| Slices per genre map: {}".format(filesPerGenreMap))
 print("| Slice size: {}x{}".format(sliceXSize, sliceYSize))
 print("--------------------------")
 
@@ -56,7 +56,7 @@ model = createModel(nbClasses, sliceXSize, sliceYSize)
 if "train" in args.mode:
 
 	#Create or load new dataset
-	train_X, train_y, validation_X, validation_y = getDataset(filesPerGenre, genres, sliceXSize, sliceYSize, validationRatio, testRatio, mode="train")
+	train_X, train_y, validation_X, validation_y = getDataset(filesPerGenreMap, genres, sliceXSize, sliceYSize, validationRatio, testRatio, mode="train")
 
 	#Define run id for graphs
 	run_id = "MusicGenres - "+str(batchSize)+" "+''.join(random.SystemRandom().choice(string.ascii_uppercase) for _ in range(10))
@@ -78,8 +78,7 @@ if "train" in args.mode:
 	print("[+] Weights saved!")
 
 	print("[+] Test Neural Network")
-	test_X, test_y = getDataset(filesPerGenre, genres, sliceXSize, sliceYSize, validationRatio, testRatio, mode="test")
-
+	test_X, test_y = getDataset(filesPerGenreMap, genres, sliceXSize, sliceYSize, validationRatio, testRatio, mode="test")
 
 	print("[+] Loading weights...")
 	model.load('musicDNN.tflearn')
@@ -93,7 +92,7 @@ if "train" in args.mode:
 if "test" in args.mode:
 
 	#Create or load new dataset
-	test_X, test_y = getDataset(filesPerGenre, genres, sliceXSize, sliceYSize, validationRatio, testRatio, mode="test")
+	test_X, test_y = getDataset(filesPerGenreMap, genres, sliceXSize, sliceYSize, validationRatio, testRatio, mode="test")
 
 	#Predict and compare
 	#Prediction = model.predict_label(test_X)

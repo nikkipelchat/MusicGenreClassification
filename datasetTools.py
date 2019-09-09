@@ -17,29 +17,28 @@ from config import ignoreGenres
 from config import spectrogramsPath
 
 #Creates name of dataset from parameters
-def getDatasetName(nbPerGenre, sliceXSize, sliceYSize):
-    name = "{}".format(nbPerGenre)
-    name += "_{}".format(sliceXSize)
+def getDatasetName(sliceXSize, sliceYSize):
+    name = "{}".format(sliceXSize)
     name += "_{}".format(sliceYSize)
     return name
 
 #Creates or loads dataset if it exists
 #Mode = "train" or "test"
-def getDataset(nbPerGenre, genres, sliceXSize, sliceYSize, validationRatio, testRatio, mode):
-    print("[+] Dataset name: {}".format(getDatasetName(nbPerGenre,sliceXSize, sliceYSize)))
-    if not os.path.isfile(datasetPath+"train_X_"+getDatasetName(nbPerGenre, sliceXSize, sliceYSize)+".p"):
-        print("[+] Creating dataset with {} slices of size {}x{} per genre...".format(nbPerGenre,sliceXSize, sliceYSize))
-        createDatasetFromSlices(nbPerGenre, genres, sliceXSize, sliceYSize, validationRatio, testRatio) 
+def getDataset(nbPerGenreMap, genres, sliceXSize, sliceYSize, validationRatio, testRatio, mode):
+    print("[+] Dataset name: {}".format(getDatasetName(sliceXSize, sliceYSize)))
+    if not os.path.isfile(datasetPath+"train_X_"+getDatasetName(sliceXSize, sliceYSize)+".p"):
+        print("[+] Creating dataset with slices of size {}x{} per genre...".format(sliceXSize, sliceYSize))
+        createDatasetFromSlices(nbPerGenreMap, genres, sliceXSize, sliceYSize, validationRatio, testRatio) 
     else:
         print("[+] Using existing dataset")
     
-    return loadDataset(nbPerGenre, genres, sliceXSize, sliceYSize, mode)
+    return loadDataset(genres, sliceXSize, sliceYSize, mode)
       
 #Loads dataset
 #Mode = "train" or "test"
-def loadDataset(nbPerGenre, genres, sliceXSize, sliceYSize, mode):
+def loadDataset(genres, sliceXSize, sliceYSize, mode):
     #Load existing
-    datasetName = getDatasetName(nbPerGenre, sliceXSize, sliceYSize)
+    datasetName = getDatasetName(sliceXSize, sliceYSize)
     if mode == "train":
         print("[+] Loading training and validation datasets... ")
         train_X = pickle.load(open("{}train_X_{}.p".format(datasetPath,datasetName), "rb" ))
@@ -57,7 +56,7 @@ def loadDataset(nbPerGenre, genres, sliceXSize, sliceYSize, mode):
         return test_X, test_y
 
 #Saves dataset
-def saveDataset(train_X, train_y, validation_X, validation_y, test_X, test_y, nbPerGenre, genres, sliceXSize, sliceYSize):
+def saveDataset(train_X, train_y, validation_X, validation_y, test_X, test_y, genres, sliceXSize, sliceYSize):
      #Create path for dataset if not existing
     if not os.path.exists(os.path.dirname(datasetPath)):
         try:
@@ -68,7 +67,7 @@ def saveDataset(train_X, train_y, validation_X, validation_y, test_X, test_y, nb
 
     #SaveDataset
     print("[+] Saving dataset... ")
-    datasetName = getDatasetName(nbPerGenre, sliceXSize, sliceYSize)
+    datasetName = getDatasetName(sliceXSize, sliceYSize)
     pickle.dump(train_X, open("{}train_X_{}.p".format(datasetPath,datasetName), "wb" ), protocol=4)
     pickle.dump(train_y, open("{}train_y_{}.p".format(datasetPath,datasetName), "wb" ), protocol=4)
     pickle.dump(validation_X, open("{}validation_X_{}.p".format(datasetPath,datasetName), "wb" ), protocol=4)
@@ -78,7 +77,7 @@ def saveDataset(train_X, train_y, validation_X, validation_y, test_X, test_y, nb
     print("    Dataset saved!")
 
 #Creates and save dataset from slices
-def createDatasetFromSlices(nbPerGenre, genres, sliceXSize, sliceYSize, validationRatio, testRatio):
+def createDatasetFromSlices(nbPerGenreMap, genres, sliceXSize, sliceYSize, validationRatio, testRatio):
     validationData = []
     testingData = []
     trainingData = []
@@ -87,12 +86,17 @@ def createDatasetFromSlices(nbPerGenre, genres, sliceXSize, sliceYSize, validati
         #Get slices in genre subfolder
         filenames = os.listdir(slicesPath+genre)
         filenames = [filename for filename in filenames if filename.endswith('.png')]
+
+        # Number of files per genre map
+        numberOfFilesPerGenre = nbPerGenreMap.get(genre, nbPerGenreMap.get('Default'))
+
         #If we're supposed to ignore genre, don't add to dataset
         if any(genre in s for s in ignoreGenres):
             print("-> Ignoring {}, {} slices".format(genre, len(filenames)))
             continue
-        print("-> Adding {}, {} slices".format(genre, len(filenames)))
-        filenames = filenames[:nbPerGenre]
+        print("-> Adding {}, {} of {} slices".format(genre, numberOfFilesPerGenre, len(filenames)))
+
+        filenames = filenames[:numberOfFilesPerGenre]
 
         #Split up files into train, test, and validate
         #Index of array to grab validation files (amount in config) of array
@@ -153,6 +157,6 @@ def createDatasetFromSlices(nbPerGenre, genres, sliceXSize, sliceYSize, validati
     print("    Dataset created!")
         
     #Save
-    saveDataset(train_X, train_Y, validation_X, validation_Y, test_X, test_Y, nbPerGenre, genres, sliceXSize, sliceYSize)
+    saveDataset(train_X, train_Y, validation_X, validation_Y, test_X, test_Y, genres, sliceXSize, sliceYSize)
 
     return train_X, train_Y, validation_X, validation_Y, test_X, test_Y

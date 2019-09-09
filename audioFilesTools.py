@@ -12,17 +12,19 @@ def isMono(filename):
 def getCategorizedGenre(genre):
 	if genre == 'Hip Hop' or genre == 'HipHop':
 		return 'HipHop'
-	if genre == 'Rap' or genre == 'Hip HopRap' or genre == 'HipHopRap':
+	if genre == 'Rap' or genre == 'RAP' or genre == 'Hip HopRap' or genre == 'HipHopRap':
 		return 'Rap'
-	if genre == 'Electronica  Dance' or genre == 'ElectronicaDance' or genre == 'Electronic':
+	if genre == 'Electronica  Dance' or genre == 'ElectronicaDance' or genre == 'Electronic' or genre == 'Electronica':
 		return 'Electronic'
 	if genre == 'Dance':
-		return 'Dance'
+		return 'Dance' # in my music
+	if genre == 'Blues':
+		return 'Blues' # in codys music
 	if genre == 'Classic Rock' or genre == 'Rock' or genre == 'General Rock':
 		return 'Rock'
 	if genre == 'PopClub' or genre == 'Pop Latino' or genre == 'Pop':
 		return 'Pop'
-	if genre == 'RBSoul' or genre == 'RB' or genre == 'Jazz' or genre == 'Reggae':
+	if genre == 'RBSoul' or genre == 'RB' or genre == 'R&B' or genre == 'Jazz' or genre == 'Reggae':
 		return 'RBSoul'
 	if genre == 'Alternative' or genre == 'Indie':
 		return 'Alternative'
@@ -39,7 +41,7 @@ def getCategorizedGenre(genre):
 
 def getGenre(filename):
 	audiofile = eyed3.load(filename)
-	#No genre
+	# No genre
 	if not audiofile.tag.genre:
 		return 'Other'
 	else:

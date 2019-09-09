@@ -35,6 +35,6 @@ def createModel(nbClasses, imageSizeX, imageSizeY):
 	convnet = fully_connected(convnet, nbClasses, activation='softmax')
 	convnet = regression(convnet, optimizer='adam', loss='categorical_crossentropy')
 
-	model = tflearn.DNN(convnet)
+	model = tflearn.DNN(convnet, tensorboard_dir='tensorboard', tensorboard_verbose=3)
 	print("    Model created!")
 	return model

@@ -3,3 +3,4 @@ Data/
 __pycache__/
 musicDNN.tflearn.*
 checkpoint
+tensorboard
