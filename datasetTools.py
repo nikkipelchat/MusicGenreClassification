@@ -1,86 +1,133 @@
-# -*- coding: utf-8 -*-
-
+'''Creates a Dataset and holds all code to do with a dataset'''
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import os
-from PIL import Image
+import pickle
 from random import shuffle
 import numpy as np
-import pickle
 
 from imageFilesTools import getImageData
 from config import datasetPath
 from config import slicesPath
 from config import ignoreGenres
-from config import spectrogramsPath
+from config import validationRatio, testRatio
+from config import sliceXSize, sliceYSize
 
-#Creates name of dataset from parameters
-def getDatasetName(sliceXSize, sliceYSize):
+
+def getDatasetName():
+  '''Creates name of dataset from parameters'''
   name = "{}".format(sliceXSize)
   name += "_{}".format(sliceYSize)
   return name
 
-#Creates or loads dataset if it exists
-#Mode = "train" or "test"
-def getDataset(nbPerGenreMap, genres, sliceXSize, sliceYSize, validationRatio, testRatio, mode):
-  print("[+] Dataset name: {}".format(getDatasetName(sliceXSize, sliceYSize)))
-  if not os.path.isfile(datasetPath+"train_X_"+getDatasetName(sliceXSize, sliceYSize)+".p"):
+
+def getDataset(nbPerGenreMap, genres, mode):
+  '''Creates or loads dataset if it exists. Mode = `train` or `test`'''
+  print("[+] Dataset name: {}".format(getDatasetName()))
+  if not os.path.isfile(datasetPath+"trainX_"+getDatasetName()+".p"):
     print("[+] Creating dataset with slices of size {}x{} per genre...".format(sliceXSize, sliceYSize))
-    createDatasetFromSlices(nbPerGenreMap, genres, sliceXSize, sliceYSize, validationRatio, testRatio) 
+    createDataset(nbPerGenreMap, genres)
   else:
     print("[+] Using existing dataset")
-  
-  return loadDataset(genres, sliceXSize, sliceYSize, mode)
 
-#Loads dataset
-#Mode = "train" or "test"
-def loadDataset(genres, sliceXSize, sliceYSize, mode):
+  return loadDataset(mode)
+
+
+def loadDataset(mode):
+  '''Loads datset. Mode = `train` or `test`'''
   #Load existing
-  datasetName = getDatasetName(sliceXSize, sliceYSize)
+  datasetName = getDatasetName()
   if mode == "train":
     print("[+] Loading training and validation datasets... ")
-    train_X = pickle.load(open("{}train_X_{}.p".format(datasetPath,datasetName), "rb" ))
-    train_y = pickle.load(open("{}train_y_{}.p".format(datasetPath,datasetName), "rb" ))
-    validation_X = pickle.load(open("{}validation_X_{}.p".format(datasetPath,datasetName), "rb" ))
-    validation_y = pickle.load(open("{}validation_y_{}.p".format(datasetPath,datasetName), "rb" ))
+    trainX = pickle.load(open("{}trainX_{}.p".format(datasetPath, datasetName), "rb"))
+    trainY = pickle.load(open("{}trainY_{}.p".format(datasetPath, datasetName), "rb"))
+    validationX = pickle.load(open("{}validationX_{}.p".format(datasetPath, datasetName), "rb"))
+    validationY = pickle.load(open("{}validationY_{}.p".format(datasetPath, datasetName), "rb"))
     print("    Training and validation datasets loaded!")
-    return train_X, train_y, validation_X, validation_y
+    return trainX, trainY, validationX, validationY
 
-  else:
-    print("[+] Loading testing dataset... ")
-    test_X = pickle.load(open("{}test_X_{}.p".format(datasetPath,datasetName), "rb" ))
-    test_y = pickle.load(open("{}test_y_{}.p".format(datasetPath,datasetName), "rb" ))
-    print("    Testing dataset loaded!")
-    return test_X, test_y
+  # mode == "test"
+  print("[+] Loading testing dataset... ")
+  testX = pickle.load(open("{}testX_{}.p".format(datasetPath, datasetName), "rb"))
+  testY = pickle.load(open("{}testY_{}.p".format(datasetPath, datasetName), "rb"))
+  print("    Testing dataset loaded!")
+  return testX, testY
 
-#Saves dataset
-def saveDataset(train_X, train_y, validation_X, validation_y, test_X, test_y, genres, sliceXSize, sliceYSize):
-  #Create path for dataset if not existing
+
+def saveDataset(trainX, trainY, validationX, validationY, testX, testY):
+  '''Saves dataset'''
+  # Create path for dataset if not existing
   if not os.path.exists(os.path.dirname(datasetPath)):
     try:
       os.makedirs(os.path.dirname(datasetPath))
     except OSError as exc: # Guard against race condition
+      # pylint: disable=undefined-variable
       if exc.errno != errno.EEXIST:
         raise
 
-  #SaveDataset
+  # SaveDataset
   print("[+] Saving dataset... ")
-  datasetName = getDatasetName(sliceXSize, sliceYSize)
-  pickle.dump(train_X, open("{}train_X_{}.p".format(datasetPath,datasetName), "wb" ), protocol=4)
-  pickle.dump(train_y, open("{}train_y_{}.p".format(datasetPath,datasetName), "wb" ), protocol=4)
-  pickle.dump(validation_X, open("{}validation_X_{}.p".format(datasetPath,datasetName), "wb" ), protocol=4)
-  pickle.dump(validation_y, open("{}validation_y_{}.p".format(datasetPath,datasetName), "wb" ), protocol=4)
-  pickle.dump(test_X, open("{}test_X_{}.p".format(datasetPath,datasetName), "wb" ), protocol=4)
-  pickle.dump(test_y, open("{}test_y_{}.p".format(datasetPath,datasetName), "wb" ), protocol=4)
+  datasetName = getDatasetName()
+  pickle.dump(trainX, open("{}trainX_{}.p".format(datasetPath, datasetName), "wb"), protocol=4)
+  pickle.dump(trainY, open("{}trainY_{}.p".format(datasetPath, datasetName), "wb"), protocol=4)
+  pickle.dump(validationX, open("{}validationX_{}.p".format(datasetPath, datasetName), "wb"), protocol=4)
+  pickle.dump(validationY, open("{}validationY_{}.p".format(datasetPath, datasetName), "wb"), protocol=4)
+  pickle.dump(testX, open("{}testX_{}.p".format(datasetPath, datasetName), "wb"), protocol=4)
+  pickle.dump(testY, open("{}testY_{}.p".format(datasetPath, datasetName), "wb"), protocol=4)
   print("    Dataset saved!")
 
-#Creates and save dataset from slices
-def createDatasetFromSlices(nbPerGenreMap, genres, sliceXSize, sliceYSize, validationRatio, testRatio):
+
+def splitFilesIntoTrainingValidationAndTestArrays(filenames):
+  '''Split up the data into 3 arrays'''
+  # Split up files into train, test, and validate
+  # Index of array to grab validation files (amount in config) of array
+  arrayIndexForValidation = int(len(filenames)*validationRatio)
+  # Index of array to grab test files (amount in config) of array
+  arrayIndexForTest = int(len(filenames)*testRatio)
+  # Index of array to grab the rest of array
+  # arrayIndexForTrain = int(len(filenames)*validationRatio)
+
+  fileNameArraySplit = np.split(filenames, [arrayIndexForValidation, arrayIndexForTest + arrayIndexForValidation])
+
+  validationFilenames = fileNameArraySplit[0]
+  testFilenames = fileNameArraySplit[1]
+  trainingFilenames = fileNameArraySplit[2]
+
+  # Randomize file selection for this genre
+  shuffle(trainingFilenames)
+  shuffle(validationFilenames)
+  shuffle(testFilenames)
+
+  return trainingFilenames, validationFilenames, testFilenames
+
+
+def addDataArraysToDataset(trainingFilenames, validationFilenames, testFilenames, \
+  trainingData, validationData, testingData, genre, genres):
+  '''Take arrays of file names and put them into correct section of dataset'''
+  # Add data (X,Y)
+  for validationFilename in validationFilenames:
+    imgData = getImageData(slicesPath+genre + "/" + validationFilename, sliceXSize, sliceYSize)
+    label = [1. if genre == g else 0. for g in genres]
+    validationData.append((imgData, label))
+
+  for testFilename in testFilenames:
+    imgData = getImageData(slicesPath+genre + "/" + testFilename, sliceXSize, sliceYSize)
+    label = [1. if genre == g else 0. for g in genres]
+    testingData.append((imgData, label))
+
+  for trainingFilename in trainingFilenames:
+    imgData = getImageData(slicesPath+genre + "/" + trainingFilename, sliceXSize, sliceYSize)
+    label = [1. if genre == g else 0. for g in genres]
+    trainingData.append((imgData, label))
+
+
+def getDataForDataset(nbPerGenreMap, genres):
+  '''For each genre it will grab all slices and split them up amongst training, validation, and test datasets'''
+  trainingData = []
   validationData = []
   testingData = []
-  trainingData = []
 
   for genre in genres:
     #Get slices in genre subfolder
@@ -90,7 +137,7 @@ def createDatasetFromSlices(nbPerGenreMap, genres, sliceXSize, sliceYSize, valid
     # Number of files per genre map
     numberOfFilesPerGenre = nbPerGenreMap.get(genre, nbPerGenreMap.get('Default'))
 
-    #If we're supposed to ignore genre, don't add to dataset
+    # If we're supposed to ignore genre, don't add to dataset
     if any(genre in s for s in ignoreGenres):
       print("-> Ignoring {}, {} slices".format(genre, len(filenames)))
       continue
@@ -98,65 +145,42 @@ def createDatasetFromSlices(nbPerGenreMap, genres, sliceXSize, sliceYSize, valid
 
     filenames = filenames[:numberOfFilesPerGenre]
 
-    #Split up files into train, test, and validate
-    #Index of array to grab validation files (amount in config) of array
-    arrayIndexForValidation = int(len(filenames)*validationRatio)
-    #Index of array to grab test files (amount in config) of array
-    arrayIndexForTest = int(len(filenames)*testRatio)
-    #Index of array to grab the rest of array
-    arrayIndexForTrain = int(len(filenames)*validationRatio)
+    trainingFilenames, validationFilenames, testFilenames = splitFilesIntoTrainingValidationAndTestArrays(filenames)
 
-    fileNameArraySplit = np.split(filenames, [arrayIndexForValidation, arrayIndexForTest + arrayIndexForValidation])
+    addDataArraysToDataset(trainingFilenames, validationFilenames, testFilenames, \
+      trainingData, validationData, testingData, genre, genres)
 
-    validationFilenames = fileNameArraySplit[0]
-    testFilenames = fileNameArraySplit[1]
-    trainingFilenames = fileNameArraySplit[2]
-    
-    #Randomize file selection for this genre
-    shuffle(validationFilenames)
-    shuffle(testFilenames)
-    shuffle(trainingFilenames)
+  return trainingData, validationData, testingData
 
-    #Add data (X,y)
-    for validationFilename in validationFilenames:
-      imgData = getImageData(slicesPath+genre+"/"+validationFilename, sliceXSize, sliceYSize)
-      label = [1. if genre == g else 0. for g in genres]
-      validationData.append((imgData,label))
 
-    for testFilename in testFilenames:
-      imgData = getImageData(slicesPath+genre+"/"+testFilename, sliceXSize, sliceYSize)
-      label = [1. if genre == g else 0. for g in genres]
-      testingData.append((imgData,label))
-
-    for trainingFilename in trainingFilenames:
-      imgData = getImageData(slicesPath+genre+"/"+trainingFilename, sliceXSize, sliceYSize)
-      label = [1. if genre == g else 0. for g in genres]
-      trainingData.append((imgData,label))
+def createDataset(nbPerGenreMap, genres):
+  '''Creates and save dataset from slices'''
+  trainingData, validationData, testingData = getDataForDataset(nbPerGenreMap, genres)
 
   #Shuffle data
   shuffle(validationData)
   shuffle(testingData)
   shuffle(trainingData)
-      
+
   print("----------------")
   print("Total dataset {}".format(len(trainingData) + len(validationData) + len(testingData)))
   print("Split up into Training: {};  Validation: {};  Test: {};".format(len(trainingData), len(validationData), len(testingData)))
 
   #Extract X and y
-  validate_X,validate_Y = zip(*validationData)
-  test_X,test_Y = zip(*testingData)
-  train_X,train_Y = zip(*trainingData)
+  validateX, validateY = zip(*validationData)
+  testX, testY = zip(*testingData)
+  trainX, trainY = zip(*trainingData)
 
   #Prepare for Tflearn
-  train_X = np.array(train_X).reshape([-1, sliceXSize, sliceYSize, 1])
-  train_Y = np.array(train_Y)
-  validation_X = np.array(validate_X).reshape([-1, sliceXSize, sliceYSize, 1])
-  validation_Y = np.array(validate_Y)
-  test_X = np.array(test_X).reshape([-1, sliceXSize, sliceYSize, 1])
-  test_Y = np.array(test_Y)
+  trainX = np.array(trainX).reshape([-1, sliceXSize, sliceYSize, 1])
+  trainY = np.array(trainY)
+  validationX = np.array(validateX).reshape([-1, sliceXSize, sliceYSize, 1])
+  validationY = np.array(validateY)
+  testX = np.array(testX).reshape([-1, sliceXSize, sliceYSize, 1])
+  testY = np.array(testY)
   print("    Dataset created!")
-      
-  #Save
-  saveDataset(train_X, train_Y, validation_X, validation_Y, test_X, test_Y, genres, sliceXSize, sliceYSize)
 
-  return train_X, train_Y, validation_X, validation_Y, test_X, test_Y
+  #Save
+  saveDataset(trainX, trainY, validationX, validationY, testX, testY)
+
+  return trainX, trainY, validationX, validationY, testX, testY

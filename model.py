@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
-
-import numpy as np
-
+'''Create a DNN model'''
 import tflearn
 from tflearn.layers.conv import conv_2d, max_pool_2d
 from tflearn.layers.core import input_data, dropout, fully_connected
 from tflearn.layers.estimator import regression
 
+
 def createModel(nbClasses, imageSizeX, imageSizeY):
+  '''Create the Deep Neural Network Model'''
   print("[+] Creating model...")
   convnet = input_data(shape=[None, imageSizeX, imageSizeY, 1], name='input')
 
@@ -35,6 +34,7 @@ def createModel(nbClasses, imageSizeX, imageSizeY):
   convnet = fully_connected(convnet, nbClasses, activation='softmax')
   convnet = regression(convnet, optimizer='adam', loss='categorical_crossentropy')
 
-  model = tflearn.DNN(convnet, tensorboard_dir='tensorboard', tensorboard_verbose=3)
+  # model = tflearn.DNN(convnet, tensorboard_dir='tensorboard', tensorboard_verbose=3)
+  model = tflearn.DNN(convnet)
   print("    Model created!")
   return model

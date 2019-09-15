@@ -15,6 +15,12 @@ tflearn
 - Create folder Data/Raw/
 - Place your labeled .mp3 files in Data/Raw/
 
+To run lint on all python files:
+
+```
+pylint *.py
+```
+
 To create the song slices (might be long):
 
 ```
