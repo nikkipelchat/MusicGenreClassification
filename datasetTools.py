@@ -133,30 +133,30 @@ def createDatasetFromSlices(nbPerGenreMap, genres, sliceXSize, sliceYSize, valid
       label = [1. if genre == g else 0. for g in genres]
       trainingData.append((imgData,label))
 
-#Shuffle data
-shuffle(validationData)
-shuffle(testingData)
-shuffle(trainingData)
-    
-print("----------------")
-print("Total dataset {}".format(len(trainingData) + len(validationData) + len(testingData)))
-print("Split up into Training: {};  Validation: {};  Test: {};".format(len(trainingData), len(validationData), len(testingData)))
+  #Shuffle data
+  shuffle(validationData)
+  shuffle(testingData)
+  shuffle(trainingData)
+      
+  print("----------------")
+  print("Total dataset {}".format(len(trainingData) + len(validationData) + len(testingData)))
+  print("Split up into Training: {};  Validation: {};  Test: {};".format(len(trainingData), len(validationData), len(testingData)))
 
-#Extract X and y
-validate_X,validate_Y = zip(*validationData)
-test_X,test_Y = zip(*testingData)
-train_X,train_Y = zip(*trainingData)
+  #Extract X and y
+  validate_X,validate_Y = zip(*validationData)
+  test_X,test_Y = zip(*testingData)
+  train_X,train_Y = zip(*trainingData)
 
-#Prepare for Tflearn
-train_X = np.array(train_X).reshape([-1, sliceXSize, sliceYSize, 1])
-train_Y = np.array(train_Y)
-validation_X = np.array(validate_X).reshape([-1, sliceXSize, sliceYSize, 1])
-validation_Y = np.array(validate_Y)
-test_X = np.array(test_X).reshape([-1, sliceXSize, sliceYSize, 1])
-test_Y = np.array(test_Y)
-print("    Dataset created!")
-    
-#Save
-saveDataset(train_X, train_Y, validation_X, validation_Y, test_X, test_Y, genres, sliceXSize, sliceYSize)
+  #Prepare for Tflearn
+  train_X = np.array(train_X).reshape([-1, sliceXSize, sliceYSize, 1])
+  train_Y = np.array(train_Y)
+  validation_X = np.array(validate_X).reshape([-1, sliceXSize, sliceYSize, 1])
+  validation_Y = np.array(validate_Y)
+  test_X = np.array(test_X).reshape([-1, sliceXSize, sliceYSize, 1])
+  test_Y = np.array(test_Y)
+  print("    Dataset created!")
+      
+  #Save
+  saveDataset(train_X, train_Y, validation_X, validation_Y, test_X, test_Y, genres, sliceXSize, sliceYSize)
 
-return train_X, train_Y, validation_X, validation_Y, test_X, test_Y
+  return train_X, train_Y, validation_X, validation_Y, test_X, test_Y
