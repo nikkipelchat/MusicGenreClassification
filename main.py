@@ -8,7 +8,7 @@ import argparse
 import tensorflow as tf
 import numpy as np
 
-from model import createModel
+from model import createModelUsingTensorflow
 from datasetTools import getDataset
 from config import slicesPath
 from config import batchSize
@@ -52,7 +52,7 @@ print("| Slice size: {}x{}".format(sliceXSize, sliceYSize))
 print("--------------------------")
 
 # Create model
-model = createModel(number_of_classes, sliceXSize, sliceYSize)
+model = createModelUsingTensorflow(number_of_classes, sliceXSize, sliceYSize)
 
 # Get dataset, train the model created
 if "train" in args.mode:
