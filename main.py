@@ -5,7 +5,8 @@ import os
 import time
 import sys
 import argparse
-# import numpy as np
+import tensorflow as tf
+import numpy as np
 
 from model import createModel
 from datasetTools import getDataset
@@ -94,11 +95,11 @@ if "test" in args.mode:
   test_x, test_y = getDataset(filesPerGenreMap, genres, mode="test")
 
   #Predict and compare
-  #Prediction = model.predict_label(test_x)
-  # actual = test_y
+  # actualClasses = test_y
+  # predictedClasses = model.predict_label(test_x)
   # print("Length of test_x: {}".format(len(test_x)))
-  # print("Prediction: {}".format(Prediction))
-  # print("Actual: {}".format(actual))
+  # print("Predicted Classes: {}".format(predictedClasses))
+  # print("Actual Classes: {}".format(actualClasses))
 
   #Load weights
   print("[+] Loading weights...")
@@ -123,6 +124,17 @@ if "test" in args.mode:
 
   # accuracy = accuracy / len(test_y)
   # print("[+] Test accuracy 1: {} ".format(accuracy))
+
+  # Confusion Matrix
+  actualClasses = test_y[:1000]
+  print("shape:", np.shape(actualClasses))
+  predictedClasses = model.predict(test_x[:1000])
+  # print("shape:", np.shape(actualClasses), " of ", actualClasses)
+  # print("-------------------------")
+  # print("shape:", np.shape(predictedClasses), " of ", predictedClasses)
+  confusionMatrix = tf.confusion_matrix(labels=tf.argmax(actualClasses, 1), predictions=tf.argmax(predictedClasses, 1))
+  with tf.Session():
+    print('Confusion Matrix: \n\n', tf.Tensor.eval(confusionMatrix,feed_dict=None, session=None))
 
 
   #Evaluate 2

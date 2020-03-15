@@ -141,7 +141,10 @@ def getDataForDataset(nbPerGenreMap, genres):
     if any(genre in s for s in ignoreGenres):
       print("-> Ignoring {}, {} slices".format(genre, len(filenames)))
       continue
-    print("-> Adding {}, {} of {} slices".format(genre, numberOfFilesPerGenre, len(filenames)))
+    if (numberOfFilesPerGenre > len(filenames)):
+      print("-> Adding {}, {} of {} slices".format(genre, len(filenames), len(filenames)))
+    else:
+      print("-> Adding {}, {} of {} slices".format(genre, numberOfFilesPerGenre, len(filenames)))
 
     filenames = filenames[:numberOfFilesPerGenre]
 
@@ -172,12 +175,12 @@ def createDataset(nbPerGenreMap, genres):
   trainX, trainY = zip(*trainingData)
 
   #Prepare for Tflearn
-  trainX = np.array(trainX).reshape([-1, sliceXSize, sliceYSize, 1])
-  trainY = np.array(trainY)
-  validationX = np.array(validateX).reshape([-1, sliceXSize, sliceYSize, 1])
-  validationY = np.array(validateY)
-  testX = np.array(testX).reshape([-1, sliceXSize, sliceYSize, 1])
-  testY = np.array(testY)
+  trainX = np.array(trainX).reshape([-1, sliceXSize, sliceYSize, 1]) # images/data
+  trainY = np.array(trainY) # labels
+  validationX = np.array(validateX).reshape([-1, sliceXSize, sliceYSize, 1]) # images/data
+  validationY = np.array(validateY) # labels
+  testX = np.array(testX).reshape([-1, sliceXSize, sliceYSize, 1]) # images/data
+  testY = np.array(testY) # labels
   print("    Dataset created!")
 
   #Save
