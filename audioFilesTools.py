@@ -17,7 +17,7 @@ def getCategorizedGenre(genre):
   result = 'Other'
   if genre in ('Hip Hop', 'HipHop'):
     result = 'HipHop'
-  elif genre in ('Rap', 'RAP', 'Hip HopRap', 'HipHopRap'):
+  elif genre in ('Rap', 'RAP', 'Hip HopRap', 'HipHopRap', 'RapHipHop'):
     result = 'Rap'
   elif genre in ('Electronica  Dance', 'ElectronicaDance', 'Electronic', 'Electronica'):
     result = 'Electronic'
@@ -50,9 +50,10 @@ def getGenre(filename):
   audiofile = eyed3.load(filename)
   # No genre
   if not audiofile.tag.genre:
+    print("The audio file genre is 'other'", filename)
     return 'Other'
 
   # audioFile has a genre
   translation = str.maketrans('', '', string.punctuation)
   fileGenre = audiofile.tag.genre.name.translate(translation)
-  return getCategorizedGenre(fileGenre)
+  return getCategorizedGenre(fileGenre.strip())

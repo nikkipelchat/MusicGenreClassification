@@ -13,6 +13,6 @@ def getProcessedData(img, imageSizeX, imageSizeY):
 
 def getImageData(filename, imageSizeX, imageSizeY):
   '''Returns numpy image at size imageSizeX*imageSizeY'''
-  img = Image.open(filename)
+  img = Image.open(filename).convert('L')
   imgData = getProcessedData(img, imageSizeX, imageSizeY)
   return imgData

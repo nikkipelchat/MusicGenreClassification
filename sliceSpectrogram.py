@@ -2,23 +2,21 @@
 import os.path
 from PIL import Image
 
-from config import spectrogramsPath, slicesPath
 
-
-def createSlicesFromSpectrograms(sliceXSize, sliceYSize):
+def createSlicesFromSpectrograms(spectrogramsPath, slicesPath, sliceXSize, sliceYSize):
   '''Slices all spectrograms'''
   for filename in os.listdir(spectrogramsPath):
     if filename.endswith(".png"):
-      sliceSpectrogram(filename, sliceXSize, sliceYSize)
+      sliceSpectrogram(filename, spectrogramsPath, slicesPath, sliceXSize, sliceYSize)
 
 
 # Improvement - Make sure we don't miss the end of the song
-def sliceSpectrogram(filename, sliceXSize, sliceYSize):
+def sliceSpectrogram(filename, spectrogramPath, slicesPath, sliceXSize, sliceYSize):
   '''Creates slices from spectrogram'''
   genre = filename.split("_")[0] 	#Ex. Dubstep_19.png
 
   # Load the full spectrogram
-  img = Image.open(spectrogramsPath+filename)
+  img = Image.open(spectrogramPath+filename)
 
   # Compute approximate number of sizeX x sizeY samples
   # pylint: disable=unused-variable
