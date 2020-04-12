@@ -16,6 +16,7 @@ pixelPerSecond = 50
 # Slice parameters
 sliceXSize = 128
 sliceYSize = 128
+sliceZSize = 3
 
 # Dataset parameters
 # filesPerGenreMap = { # uneven for cody's dataset to replicate mine

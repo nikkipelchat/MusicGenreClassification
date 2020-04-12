@@ -12,10 +12,10 @@ from keras.models import Sequential
 from keras.optimizers import rmsprop
 # import numpy as np
 
-def createModelUsingTensorflow(nbClasses, imageSizeX, imageSizeY):
+def createModelUsingTensorflow(nbClasses, imageSizeX, imageSizeY, imageSizeZ):
   '''Create the Deep Neural Network Model'''
   print("[+] Creating model...")
-  convnet = input_data(shape=[None, imageSizeX, imageSizeY, 1], name='input')
+  convnet = input_data(shape=[None, imageSizeX, imageSizeY, imageSizeZ], name='input')
 
   convnet = conv_2d(convnet, 64, 2, activation='relu', weights_init="Xavier")
   convnet = max_pool_2d(convnet, 2)
@@ -47,13 +47,13 @@ def createModelUsingTensorflow(nbClasses, imageSizeX, imageSizeY):
   return model
 
 
-def createModelUsingKeras(nbClasses, imageSizeX, imageSizeY):
+def createModelUsingKeras(nbClasses, imageSizeX, imageSizeY, imageSizeZ):
   '''Create the Deep Neural Network Model'''
   print("[+] Creating model...")
   if K.image_data_format() == 'channels_first':
       input_shape = (1, imageSizeX, imageSizeY) # might have X and Y mixed up
   else:
-      input_shape = (imageSizeX, imageSizeY, 1) # might have X and Y mixed up
+      input_shape = (imageSizeX, imageSizeY, imageSizeZ) # might have X and Y mixed up
 
   model = Sequential()
   

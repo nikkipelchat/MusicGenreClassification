@@ -13,13 +13,13 @@ from config import datasetPath
 from config import slicesPath
 from config import ignoreGenres
 from config import validationRatio, testRatio
-from config import sliceXSize, sliceYSize
-
+from config import sliceXSize, sliceYSize, sliceZSize
 
 def getDatasetName():
   '''Creates name of dataset from parameters'''
   name = "{}".format(sliceXSize)
   name += "_{}".format(sliceYSize)
+  name += "_{}".format(sliceZSize)
   return name
 
 
@@ -27,7 +27,7 @@ def getDataset(nbPerGenreMap, genres, mode):
   '''Creates or loads dataset if it exists. Mode = `train` or `test`'''
   print("[+] Dataset name: {}".format(getDatasetName()))
   if not os.path.isfile(datasetPath+"trainX_"+getDatasetName()+".p"):
-    print("[+] Creating dataset with slices of size {}x{} per genre...".format(sliceXSize, sliceYSize))
+    print("[+] Creating dataset with slices of size {}x{}x{} per genre...".format(sliceXSize, sliceYSize, sliceZSize))
     createDataset(nbPerGenreMap, genres)
   else:
     print("[+] Using existing dataset")
@@ -108,17 +108,17 @@ def addDataArraysToDataset(trainingFilenames, validationFilenames, testFilenames
   '''Take arrays of file names and put them into correct section of dataset'''
   # Add data (X,Y)
   for validationFilename in validationFilenames:
-    imgData = getImageData(slicesPath+genre + "/" + validationFilename, sliceXSize, sliceYSize)
+    imgData = getImageData(slicesPath+genre + "/" + validationFilename, sliceXSize, sliceYSize, sliceZSize)
     label = [1. if genre == g else 0. for g in genres]
     validationData.append((imgData, label))
 
   for testFilename in testFilenames:
-    imgData = getImageData(slicesPath+genre + "/" + testFilename, sliceXSize, sliceYSize)
+    imgData = getImageData(slicesPath+genre + "/" + testFilename, sliceXSize, sliceYSize, sliceZSize)
     label = [1. if genre == g else 0. for g in genres]
     testingData.append((imgData, label))
 
   for trainingFilename in trainingFilenames:
-    imgData = getImageData(slicesPath+genre + "/" + trainingFilename, sliceXSize, sliceYSize)
+    imgData = getImageData(slicesPath+genre + "/" + trainingFilename, sliceXSize, sliceYSize, sliceZSize)
     label = [1. if genre == g else 0. for g in genres]
     trainingData.append((imgData, label))
 
@@ -175,11 +175,11 @@ def createDataset(nbPerGenreMap, genres):
   trainX, trainY = zip(*trainingData)
 
   #Prepare for Tflearn
-  trainX = np.array(trainX).reshape([-1, sliceXSize, sliceYSize, 1]) # images/data
+  trainX = np.array(trainX).reshape([-1, sliceXSize, sliceYSize, sliceZSize]) # images/data
   trainY = np.array(trainY) # labels
-  validationX = np.array(validateX).reshape([-1, sliceXSize, sliceYSize, 1]) # images/data
+  validationX = np.array(validateX).reshape([-1, sliceXSize, sliceYSize, sliceZSize]) # images/data
   validationY = np.array(validateY) # labels
-  testX = np.array(testX).reshape([-1, sliceXSize, sliceYSize, 1]) # images/data
+  testX = np.array(testX).reshape([-1, sliceXSize, sliceYSize, sliceZSize]) # images/data
   testY = np.array(testY) # labels
   print("    Dataset created!")
 

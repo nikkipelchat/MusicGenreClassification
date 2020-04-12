@@ -15,7 +15,7 @@ from config import batchSize
 from config import filesPerGenreMap
 from config import nbEpoch
 from config import validationRatio, testRatio
-from config import sliceXSize, sliceYSize
+from config import sliceXSize, sliceYSize, sliceZSize
 from config import ignoreGenres
 
 from songToData import createSlicesFromAudio
@@ -48,11 +48,11 @@ number_of_classes = len(genres)
 
 print("| Number of classes: {}".format(number_of_classes))
 print("| Slices per genre map: {}".format(filesPerGenreMap))
-print("| Slice size: {}x{}".format(sliceXSize, sliceYSize))
+print("| Slice size: {}x{}x{}".format(sliceXSize, sliceYSize, sliceZSize))
 print("--------------------------")
 
 # Create model
-model = createModelUsingTensorflow(number_of_classes, sliceXSize, sliceYSize)
+model = createModelUsingTensorflow(number_of_classes, sliceXSize, sliceYSize, sliceZSize)
 
 # Get dataset, train the model created
 if "train" in args.mode:
