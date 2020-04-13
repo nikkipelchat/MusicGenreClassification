@@ -21,7 +21,8 @@ def sliceSpectrogram(filename, spectrogramPath, slicesPath, sliceXSize, sliceYSi
   # Compute approximate number of sizeX x sizeY samples
   # pylint: disable=unused-variable
   width, height = img.size
-  nbSamples = int(width/sliceXSize)
+  expectedNumberOfSamples = int(width/sliceXSize)
+  actualNumberOfSamples = 0
 
   # Create path if not existing
   slicePath = slicesPath+"{}/".format(genre)
@@ -34,11 +35,24 @@ def sliceSpectrogram(filename, spectrogramPath, slicesPath, sliceXSize, sliceYSi
         raise
 
   # For each sample
-  for i in range(nbSamples):
-    if i == 0:
-      print("Creating {} slices for {}: ".format(nbSamples, filename))
+  for i in range(expectedNumberOfSamples):
     # Extract and save sizeX x sizeY sample
     startPixel = i*sliceXSize
-    imgTmp = img.crop((startPixel, 1, startPixel + sliceXSize, sliceYSize + 1))
-    # imgTmp.save(slicesPath+"{}/{}_{}_{}.png".format(genre,filename[:-4],i,'v2'))
-    imgTmp.save(slicesPath+"{}/{}_{}.png".format(genre, filename[:-4], i))
+    contrastDifference = getContrastDifference(img, startPixel, sliceXSize, sliceYSize)
+
+    if contrastDifference > 30:
+      imgTmp = img.crop((startPixel, 1, startPixel + sliceXSize, sliceYSize + 1))
+      # imgTmp.save(slicesPath+"{}/{}_{}_{}.png".format(genre,filename[:-4],i,'v2'))
+      imgTmp.save(slicesPath+"{}/{}_{}.png".format(genre, filename[:-4], i))
+      actualNumberOfSamples = actualNumberOfSamples + 1
+
+  print("Created {}/{} slices for {}: ".format(actualNumberOfSamples, expectedNumberOfSamples, filename))
+
+''' determine difference in contrast of the image to see if its almost all white or all black '''
+def getContrastDifference(img, startPixel, sliceXSize, sliceYSize):
+  imgTmp = img.crop((startPixel, 1, startPixel + sliceXSize, sliceYSize))
+  extremaLow, extremaHigh = imgTmp.convert("L").getextrema()
+  contrastDifference = extremaHigh - extremaLow
+  if contrastDifference < 30 and extremaLow != 0 and extremaHigh != 255:
+      print("    Slice was ignored but wasn't black or white.  (extremaLow, extremaHigh) -> ({}, {})".format(extremaLow, extremaHigh))
+  return contrastDifference
