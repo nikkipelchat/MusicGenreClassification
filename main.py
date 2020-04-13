@@ -11,7 +11,7 @@ import numpy as np
 from model import createModelUsingTensorflow
 from datasetTools import getDataset
 from config import slicesPath
-from config import datasetPath
+from config import checkpointPath
 from config import batchSize
 from config import filesPerGenreMap
 from config import nbEpoch
@@ -56,15 +56,17 @@ print("| Slice size: {}x{}x{}".format(sliceXSize, sliceYSize, sliceZSize))
 print("--------------------------")
 
 # Create model or resume training
-model = createModelUsingTensorflow(number_of_classes, sliceXSize, sliceYSize, sliceZSize, args.resume)
+model = createModelUsingTensorflow(number_of_classes, sliceXSize, sliceYSize, sliceZSize, args)
 
 # Get dataset, train the model created
 if "train" in args.mode:
   #Create or load new dataset
   train_x, train_y, validation_x, validation_y = getDataset(filesPerGenreMap, genres, mode="train")
 
-  if args.resume != False and args.epochs != False:
-    nbEpoch = args.epochs
+  if args.resume and args.epochs:
+    number_of_epochs = args.epochs
+  else:
+    number_of_epochs = nbEpoch
 
   #Define run id for graphs
   run_id = "MusicGenres - "+str(batchSize)+" "+''.join(random.SystemRandom().choice(string.ascii_uppercase) for _ in range(10))
@@ -72,7 +74,7 @@ if "train" in args.mode:
   #Train the model
   print("[+] Training the model...")
   t0 = time.gmtime()
-  model.fit(train_x, train_y, n_epoch=nbEpoch, batch_size=batchSize, shuffle=True, validation_set=(validation_x, \
+  model.fit(train_x, train_y, n_epoch=number_of_epochs, batch_size=batchSize, shuffle=True, validation_set=(validation_x, \
     validation_y), snapshot_epoch=True, show_metric=True, run_id=run_id)
   t1 = time.gmtime()
   seconds_to_train = time.mktime(t1) - time.mktime(t0)
@@ -82,14 +84,14 @@ if "train" in args.mode:
 
   #Save trained model
   print("[+] Saving the weights...")
-  model.save('{}/model.tfl'.format(datasetPath))
+  model.save('{}/model.tfl'.format(checkpointPath))
   print("[+] Weights saved!")
 
   print("[+] Test Neural Network")
   test_x, test_y = getDataset(filesPerGenreMap, genres, mode="test")
 
   print("[+] Loading weights...")
-  model.load('{}/model.tfl'.format(datasetPath))
+  model.load('{}/model.tfl'.format(checkpointPath))
   print("    Weights loaded!")
   #Evaluate 2
   test_accuracy = model.evaluate(test_x, test_y)[0]
@@ -103,7 +105,7 @@ if "test" in args.mode:
   test_x, test_y = getDataset(filesPerGenreMap, genres, mode="test")
 
   print("[+] Loading weights...")
-  model.load('{}/model.tfl'.format(datasetPath))
+  model.load('{}/model.tfl'.format(checkpointPath))
   print("    Weights loaded!")
   #Evaluate 2
   test_accuracy = model.evaluate(test_x, test_y)[0]
@@ -124,7 +126,7 @@ if "confusionmatrix" in args.mode:
 
   #Load weights
   print("[+] Loading weights...")
-  model.load('{}/model.tfl'.format(datasetPath))
+  model.load('{}/model.tfl'.format(checkpointPath))
   print("    Weights loaded!")
 
   # Run the model on one example
@@ -147,15 +149,15 @@ if "confusionmatrix" in args.mode:
   # print("[+] Test accuracy 1: {} ".format(accuracy))
 
   # Confusion Matrix
-  actualClasses = test_y[:1000]
-  print("shape:", np.shape(actualClasses))
-  predictedClasses = model.predict(test_x[:1000])
-  # print("shape:", np.shape(actualClasses), " of ", actualClasses)
+  actual_classes = test_y[:1000]
+  print("shape:", np.shape(actual_classes))
+  predicted_classes = model.predict(test_x[:1000])
+  # print("shape:", np.shape(actual_classes), " of ", actual_classes)
   # print("-------------------------")
-  # print("shape:", np.shape(predictedClasses), " of ", predictedClasses)
-  confusionMatrix = tf.confusion_matrix(labels=tf.argmax(actualClasses, 1), predictions=tf.argmax(predictedClasses, 1))
+  # print("shape:", np.shape(predicted_classes), " of ", predicted_classes)
+  confusion_matrix = tf.confusion_matrix(labels=tf.argmax(actual_classes, 1), predictions=tf.argmax(predicted_classes, 1))
   with tf.Session():
-    print('Confusion Matrix: \n\n', tf.Tensor.eval(confusionMatrix,feed_dict=None, session=None))
+    print('Confusion Matrix: \n\n', tf.Tensor.eval(confusion_matrix, feed_dict=None, session=None))
 
 
   #Evaluate 2

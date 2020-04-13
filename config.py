@@ -3,7 +3,8 @@
 # Define paths for files
 spectrogramsPath = "Data/Spectrograms/"
 slicesPath = "Data/Slices/"
-datasetPath = "DatasetAndCheckpoints/"
+datasetPath = "Data/Dataset/"
+checkpointPath = "Checkpoints/"
 rawDataPath = "Data/Raw/"
 
 # Spectrogram resolution

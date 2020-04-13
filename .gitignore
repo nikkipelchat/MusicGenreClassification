@@ -1,5 +1,5 @@
 # ignore any data we generate
 Data/
 __pycache__/
-DatasetAndCheckpoints
+Checkpoints/
 tensorboard

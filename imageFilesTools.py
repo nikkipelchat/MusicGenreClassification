@@ -1,7 +1,7 @@
 '''Open image files and return data within the image to add to dataset'''
+import os
 from PIL import Image
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 def getProcessedData(img, imageSizeX, imageSizeY, imageSizeZ):
@@ -14,10 +14,21 @@ def getProcessedData(img, imageSizeX, imageSizeY, imageSizeZ):
 def getImageData(filename, imageSizeX, imageSizeY, imageSizeZ):
   '''Returns numpy image at size X*Y*Z'''
   conversionType = 'L' # 8-bit pixels, black and white
-  if (imageSizeZ == 3):
+  if imageSizeZ == 3:
     conversionType = 'RGB' # 3x8-bit pixels, true color
-  elif (imageSizeZ == 4):
+  elif imageSizeZ == 4:
     conversionType = 'RGBA' # 4x8-bit pixels, true color with transparency mask
   img = Image.open(filename).convert(conversionType)
   imgData = getProcessedData(img, imageSizeX, imageSizeY, imageSizeZ)
   return imgData
+
+
+def createFolder(folderName):
+  '''Create path if not existing'''
+  if not os.path.exists(os.path.dirname(folderName)):
+    try:
+      os.makedirs(os.path.dirname(folderName))
+    except OSError as exc: # Guard against race condition
+      # pylint: disable=undefined-variable
+      if exc.errno != errno.EEXIST:
+        raise

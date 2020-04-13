@@ -8,7 +8,7 @@ import pickle
 from random import shuffle
 import numpy as np
 
-from imageFilesTools import getImageData
+from imageFilesTools import getImageData, createFolder
 from config import datasetPath
 from config import slicesPath
 from config import ignoreGenres
@@ -58,14 +58,7 @@ def loadDataset(mode):
 
 def saveDataset(trainX, trainY, validationX, validationY, testX, testY):
   '''Saves dataset'''
-  # Create path for dataset if not existing
-  if not os.path.exists(os.path.dirname(datasetPath)):
-    try:
-      os.makedirs(os.path.dirname(datasetPath))
-    except OSError as exc: # Guard against race condition
-      # pylint: disable=undefined-variable
-      if exc.errno != errno.EEXIST:
-        raise
+  createFolder(datasetPath)
 
   # SaveDataset
   print("[+] Saving dataset... ")
@@ -141,7 +134,7 @@ def getDataForDataset(nbPerGenreMap, genres):
     if any(genre in s for s in ignoreGenres):
       print("-> Ignoring {}, {} slices".format(genre, len(filenames)))
       continue
-    if (numberOfFilesPerGenre > len(filenames)):
+    if numberOfFilesPerGenre > len(filenames):
       print("-> Adding {}, {} of {} slices".format(genre, len(filenames), len(filenames)))
     else:
       print("-> Adding {}, {} of {} slices".format(genre, numberOfFilesPerGenre, len(filenames)))

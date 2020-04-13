@@ -1,6 +1,7 @@
 '''Slice up all spectrograms which are the length of the full song'''
 import os.path
 from PIL import Image
+from imageFilesTools import createFolder
 
 
 def createSlicesFromSpectrograms(spectrogramsPath, slicesPath, sliceXSize, sliceYSize):
@@ -10,7 +11,6 @@ def createSlicesFromSpectrograms(spectrogramsPath, slicesPath, sliceXSize, slice
       sliceSpectrogram(filename, spectrogramsPath, slicesPath, sliceXSize, sliceYSize)
 
 
-# Improvement - Make sure we don't miss the end of the song
 def sliceSpectrogram(filename, spectrogramPath, slicesPath, sliceXSize, sliceYSize):
   '''Creates slices from spectrogram'''
   genre = filename.split("_")[0] 	#Ex. Dubstep_19.png
@@ -25,14 +25,7 @@ def sliceSpectrogram(filename, spectrogramPath, slicesPath, sliceXSize, sliceYSi
   actualNumberOfSamples = 0
 
   # Create path if not existing
-  slicePath = slicesPath+"{}/".format(genre)
-  if not os.path.exists(os.path.dirname(slicePath)):
-    try:
-      os.makedirs(os.path.dirname(slicePath))
-    except OSError as exc: # Guard against race condition
-      # pylint: disable=undefined-variable
-      if exc.errno != errno.EEXIST:
-        raise
+  createFolder(slicesPath+"{}/".format(genre))
 
   # For each sample
   for i in range(expectedNumberOfSamples):
@@ -48,11 +41,12 @@ def sliceSpectrogram(filename, spectrogramPath, slicesPath, sliceXSize, sliceYSi
 
   print("Created {}/{} slices for {}: ".format(actualNumberOfSamples, expectedNumberOfSamples, filename))
 
-''' determine difference in contrast of the image to see if its almost all white or all black '''
+
 def getContrastDifference(img, startPixel, sliceXSize, sliceYSize):
+  ''' determine difference in contrast of the image to see if its almost all white or all black '''
   imgTmp = img.crop((startPixel, 1, startPixel + sliceXSize, sliceYSize))
   extremaLow, extremaHigh = imgTmp.convert("L").getextrema()
   contrastDifference = extremaHigh - extremaLow
   if contrastDifference < 30 and extremaLow != 0 and extremaHigh != 255:
-      print("    Slice was ignored but wasn't black or white.  (extremaLow, extremaHigh) -> ({}, {})".format(extremaLow, extremaHigh))
+    print("    Slice was ignored but wasn't black or white.  (extremaLow, extremaHigh) -> ({}, {})".format(extremaLow, extremaHigh))
   return contrastDifference

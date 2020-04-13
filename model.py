@@ -1,19 +1,20 @@
 '''Create a DNN model'''
-from config import datasetPath
-
 import tflearn
 from tflearn.layers.conv import conv_2d, max_pool_2d
 from tflearn.layers.core import input_data, dropout, fully_connected
 from tflearn.layers.estimator import regression
 
-import keras
+# import keras
 from keras import backend as K
 from keras.layers.core import Flatten, Dense, Dropout, Activation
 from keras.layers import MaxPooling2D, Conv2D, ZeroPadding2D
 from keras.models import Sequential
 from keras.optimizers import rmsprop
 
-def createModelUsingTensorflow(nbClasses, imageSizeX, imageSizeY, imageSizeZ, checkpointToResume):
+from config import checkpointPath
+from imageFilesTools import createFolder
+
+def createModelUsingTensorflow(nbClasses, imageSizeX, imageSizeY, imageSizeZ, args):
   '''Create the Deep Neural Network Model'''
   print("[+] Creating model...")
   convnet = input_data(shape=[None, imageSizeX, imageSizeY, imageSizeZ], name='input')
@@ -43,14 +44,16 @@ def createModelUsingTensorflow(nbClasses, imageSizeX, imageSizeY, imageSizeZ, ch
   convnet = regression(convnet, optimizer='adam', loss='categorical_crossentropy')
 
   # model = tflearn.DNN(convnet, tensorboard_dir='tensorboard', tensorboard_verbose=3)
-  model = tflearn.DNN(convnet, checkpoint_path='{}/model.tfl'.format(datasetPath), max_checkpoints=1)
+  createFolder(checkpointPath)
+  model = tflearn.DNN(convnet, checkpoint_path='{}/model.tfl'.format(checkpointPath), max_checkpoints=1)
 
-  if checkpointToResume != False:
+  if args.resume and args.epochs:
     try:
-      model.load('{}/model.tfl-{}'.format(datasetPath, checkpointToResume))
+      model.load('{}/model.tfl-{}'.format(checkpointPath, args.resume))
       print("    Model retrieved and resuming training!")
     except Exception as err:
       print("Couldn't load the previous model", err)
+      raise err
   else:
     print("    Model created!")
   return model
@@ -60,13 +63,13 @@ def createModelUsingKeras(nbClasses, imageSizeX, imageSizeY, imageSizeZ):
   '''Create the Deep Neural Network Model'''
   print("[+] Creating model...")
   if K.image_data_format() == 'channels_first':
-      input_shape = (1, imageSizeX, imageSizeY) # might have X and Y mixed up
+    inputShape = (1, imageSizeX, imageSizeY) # might have X and Y mixed up
   else:
-      input_shape = (imageSizeX, imageSizeY, imageSizeZ) # might have X and Y mixed up
+    inputShape = (imageSizeX, imageSizeY, imageSizeZ) # might have X and Y mixed up
 
   model = Sequential()
-  
-  model.add(ZeroPadding2D((1,1), input_shape=input_shape))
+
+  model.add(ZeroPadding2D((1, 1), input_shape=inputShape))
 
   model.add(Conv2D(128, 2, activation='sigmoid', kernel_initializer="glorot_normal"))
   model.add(MaxPooling2D((2, 2)))
@@ -91,7 +94,7 @@ def createModelUsingKeras(nbClasses, imageSizeX, imageSizeY, imageSizeZ):
   model.add(Dense(nbClasses))
   model.add(Activation('softmax'))
   opt = rmsprop()
-  model.compile(loss='categorical_crossentropy', optimizer = opt, metrics = ['accuracy'])
+  model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
   print("    Model created!")
   return model
