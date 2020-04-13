@@ -1,4 +1,6 @@
 '''Create a DNN model'''
+from config import datasetPath
+
 import tflearn
 from tflearn.layers.conv import conv_2d, max_pool_2d
 from tflearn.layers.core import input_data, dropout, fully_connected
@@ -10,9 +12,8 @@ from keras.layers.core import Flatten, Dense, Dropout, Activation
 from keras.layers import MaxPooling2D, Conv2D, ZeroPadding2D
 from keras.models import Sequential
 from keras.optimizers import rmsprop
-# import numpy as np
 
-def createModelUsingTensorflow(nbClasses, imageSizeX, imageSizeY, imageSizeZ):
+def createModelUsingTensorflow(nbClasses, imageSizeX, imageSizeY, imageSizeZ, checkpointToResume):
   '''Create the Deep Neural Network Model'''
   print("[+] Creating model...")
   convnet = input_data(shape=[None, imageSizeX, imageSizeY, imageSizeZ], name='input')
@@ -42,8 +43,16 @@ def createModelUsingTensorflow(nbClasses, imageSizeX, imageSizeY, imageSizeZ):
   convnet = regression(convnet, optimizer='adam', loss='categorical_crossentropy')
 
   # model = tflearn.DNN(convnet, tensorboard_dir='tensorboard', tensorboard_verbose=3)
-  model = tflearn.DNN(convnet)
-  print("    Model created!")
+  model = tflearn.DNN(convnet, checkpoint_path='{}/model.tfl'.format(datasetPath), max_checkpoints=1)
+
+  if checkpointToResume != False:
+    try:
+      model.load('{}/model.tfl-{}'.format(datasetPath, checkpointToResume))
+      print("    Model retrieved and resuming training!")
+    except Exception as err:
+      print("Couldn't load the previous model", err)
+  else:
+    print("    Model created!")
   return model
 
 

@@ -8,8 +8,8 @@ import eyed3
 from sliceSpectrogram import createSlicesFromSpectrograms
 from audioFilesTools import isMono, getGenre
 from config import rawDataPath
-from config import spectrogramsPath, spectrogramsPathToGreys, spectrogramsPathToBinary
-from config import slicesPath, slicesPathToGreys, slicesPathToBinary
+from config import spectrogramsPath
+from config import slicesPath
 from config import pixelPerSecond
 from config import sliceXSize, sliceYSize
 
@@ -47,18 +47,46 @@ def createSpectrogramMelScale(filename, newFilename):
     plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
 
     # Display Spectrogram
-    # librosa.display.specshow(librosa.power_to_db(ps, ref=np.max), sr=sr, cmap='binary', x_axis='time', y_axis='mel') # to see amplitude it would be S**2 https://librosa.github.io/librosa/generated/librosa.core.amplitude_to_db.html
-    # plt.savefig('{}'.format(spectrogramsPathToBinary+newFilename), bbox_inches=None, pad_inches=0)
+    power = librosa.power_to_db(ps, ref=np.max)
+    amplitude = librosa.power_to_db(ps**2, ref=np.max)
 
+    # binary mel
+    # librosa.display.specshow(power, sr=sr, cmap='binary', x_axis='time', y_axis='mel') # to see amplitude it would be S**2 https://librosa.github.io/librosa/generated/librosa.core.amplitude_to_db.html
+    # plt.savefig('{}'.format(spectrogramsPath+newFilename), bbox_inches=None, pad_inches=0)
+    # librosa.display.specshow(amplitude, sr=sr, cmap='binary', x_axis='time', y_axis='mel') # to see amplitude it would be S**2 https://librosa.github.io/librosa/generated/librosa.core.amplitude_to_db.html
+    # plt.savefig('{}'.format(spectrogramsPathToMelAmplitude+newFilename), bbox_inches=None, pad_inches=0)
+
+    # greys mel
     # librosa.display.specshow(librosa.power_to_db(ps, ref=np.max), sr=sr, cmap='Greys', x_axis='time', y_axis='mel') # to see amplitude it would be S**2 https://librosa.github.io/librosa/generated/librosa.core.amplitude_to_db.html
     # plt.savefig('{}'.format(spectrogramsPathToGreys+newFilename), bbox_inches=None, pad_inches=0)
 
+    # colored mel
     librosa.display.specshow(librosa.power_to_db(ps, ref=np.max), sr=sr, x_axis='time', y_axis='mel') # to see aplitude it would be S**2 https://librosa.github.io/librosa/generated/librosa.core.amplitude_to_db.html
     plt.savefig('{}'.format(spectrogramsPath+newFilename), bbox_inches=None, pad_inches=0)
+
+    # binary log
+    # librosa.display.specshow(power, sr=sr, cmap='binary', x_axis='time', y_axis='log') # to see amplitude it would be S**2 https://librosa.github.io/librosa/generated/librosa.core.amplitude_to_db.html
+    # plt.savefig('{}'.format(spectrogramsPathToLogPower+newFilename), bbox_inches=None, pad_inches=0)
+    # librosa.display.specshow(amplitude, sr=sr, cmap='binary', x_axis='time', y_axis='log') # to see amplitude it would be S**2 https://librosa.github.io/librosa/generated/librosa.core.amplitude_to_db.html
+    # plt.savefig('{}'.format(spectrogramsPathToLogAmplitude+newFilename), bbox_inches=None, pad_inches=0)
+
+    # binary linear
+    # librosa.display.specshow(power, sr=sr, cmap='binary', x_axis='time') # to see amplitude it would be S**2 https://librosa.github.io/librosa/generated/librosa.core.amplitude_to_db.html
+    # plt.savefig('{}'.format(spectrogramsPathToLinearPower+newFilename), bbox_inches=None, pad_inches=0)
+    # librosa.display.specshow(amplitude, sr=sr, cmap='binary', x_axis='time') # to see amplitude it would be S**2 https://librosa.github.io/librosa/generated/librosa.core.amplitude_to_db.html
+    # plt.savefig('{}'.format(spectrogramsPathToLinearAmplitude+newFilename), bbox_inches=None, pad_inches=0)
+
+    # binary mfcc
+    # mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=40)
+    # librosa.display.specshow(mfccs, cmap='binary', x_axis='time', y_axis='linear')
+    # plt.savefig('{}'.format(spectrogramsPathToMFCCLinear+newFilename), bbox_inches=None, pad_inches=0)
+    # librosa.display.specshow(mfccs, cmap='binary', x_axis='time')
+    # plt.savefig('{}'.format(spectrogramsPathToMFCC+newFilename), bbox_inches=None, pad_inches=0)
+
   except KeyboardInterrupt:
-      raise
+    raise
   except:
-    print("Couldn't create spectrogram for {}".format(filename))
+    print("Couldn't create spectrogram(s) for {}".format(filename))
 
   # Save Spectrogram
   plt.close()
@@ -159,31 +187,7 @@ def createSpectrogramsFromAudio():
   nbFiles = len(files)
 
   # Create path if not existing
-  if not os.path.exists(os.path.dirname(spectrogramsPath)):
-    try:
-      os.makedirs(os.path.dirname(spectrogramsPath))
-    except OSError as exc: # Guard against race condition
-      # pylint: disable=undefined-variable
-      if exc.errno != errno.EEXIST:
-        raise
-
-  # # Create path if not existing
-  # if not os.path.exists(os.path.dirname(spectrogramsPathToGreys)):
-  #   try:
-  #     os.makedirs(os.path.dirname(spectrogramsPathToGreys))
-  #   except OSError as exc: # Guard against race condition
-  #     # pylint: disable=undefined-variable
-  #     if exc.errno != errno.EEXIST:
-  #       raise
-
-  # # Create path if not existing
-  # if not os.path.exists(os.path.dirname(spectrogramsPathToBinary)):
-  #   try:
-  #     os.makedirs(os.path.dirname(spectrogramsPathToBinary))
-  #   except OSError as exc: # Guard against race condition
-  #     # pylint: disable=undefined-variable
-  #     if exc.errno != errno.EEXIST:
-  #       raise
+  createSlicesFolders()
 
   # Rename files according to genre
   for index, filename in enumerate(files):
@@ -212,10 +216,18 @@ def createSlicesFromAudio():
   createSpectrogramsFromAudio()
   print("Spectrograms created!")
 
-  print("Creating slices for color images...")
+  print("Creating slices for images...")
   createSlicesFromSpectrograms(spectrogramsPath, slicesPath, sliceXSize, sliceYSize)
-  # print("Creating slices for greys...")
-  # createSlicesFromSpectrograms(spectrogramsPathToGreys, slicesPathToGreys, sliceXSize, sliceYSize)
-  # print("Creating slices for binary...")
-  # createSlicesFromSpectrograms(spectrogramsPathToBinary, slicesPathToBinary, sliceXSize, sliceYSize)
   print("Slices created!")
+
+
+def createSlicesFolders():
+  '''Create folders'''
+  # Create path if not existing
+  if not os.path.exists(os.path.dirname(spectrogramsPath)):
+    try:
+      os.makedirs(os.path.dirname(spectrogramsPath))
+    except OSError as exc: # Guard against race condition
+      # pylint: disable=undefined-variable
+      if exc.errno != errno.EEXIST:
+        raise

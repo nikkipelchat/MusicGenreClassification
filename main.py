@@ -11,6 +11,7 @@ import numpy as np
 from model import createModelUsingTensorflow
 from datasetTools import getDataset
 from config import slicesPath
+from config import datasetPath
 from config import batchSize
 from config import filesPerGenreMap
 from config import nbEpoch
@@ -21,8 +22,11 @@ from config import ignoreGenres
 from songToData import createSlicesFromAudio
 
 parser = argparse.ArgumentParser()
-parser.add_argument("mode", help="Trains or tests the CNN", nargs='+', choices=["train", "test", "slice"])
+parser.add_argument("mode", help="Trains or tests the CNN", nargs="*", choices=["train", "continue", "test", "confusionmatrix", "slice"])
+parser.add_argument("--resume", help="The version to continue training from", required=False, default=False)
+parser.add_argument("--epochs", help="The number of epochs to finish training from", type=int, required=False, default=False)
 args = parser.parse_args()
+print("args", args)
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' # only log errors
 
@@ -51,13 +55,16 @@ print("| Slices per genre map: {}".format(filesPerGenreMap))
 print("| Slice size: {}x{}x{}".format(sliceXSize, sliceYSize, sliceZSize))
 print("--------------------------")
 
-# Create model
-model = createModelUsingTensorflow(number_of_classes, sliceXSize, sliceYSize, sliceZSize)
+# Create model or resume training
+model = createModelUsingTensorflow(number_of_classes, sliceXSize, sliceYSize, sliceZSize, args.resume)
 
 # Get dataset, train the model created
 if "train" in args.mode:
   #Create or load new dataset
   train_x, train_y, validation_x, validation_y = getDataset(filesPerGenreMap, genres, mode="train")
+
+  if args.resume != False and args.epochs != False:
+    nbEpoch = args.epochs
 
   #Define run id for graphs
   run_id = "MusicGenres - "+str(batchSize)+" "+''.join(random.SystemRandom().choice(string.ascii_uppercase) for _ in range(10))
@@ -66,7 +73,7 @@ if "train" in args.mode:
   print("[+] Training the model...")
   t0 = time.gmtime()
   model.fit(train_x, train_y, n_epoch=nbEpoch, batch_size=batchSize, shuffle=True, validation_set=(validation_x, \
-    validation_y), snapshot_step=100, show_metric=True, run_id=run_id)
+    validation_y), snapshot_epoch=True, show_metric=True, run_id=run_id)
   t1 = time.gmtime()
   seconds_to_train = time.mktime(t1) - time.mktime(t0)
   hours, minutes = divmod(seconds_to_train, 3600)
@@ -75,22 +82,36 @@ if "train" in args.mode:
 
   #Save trained model
   print("[+] Saving the weights...")
-  model.save('musicDNN.tflearn')
+  model.save('{}/model.tfl'.format(datasetPath))
   print("[+] Weights saved!")
 
   print("[+] Test Neural Network")
   test_x, test_y = getDataset(filesPerGenreMap, genres, mode="test")
 
   print("[+] Loading weights...")
-  model.load('musicDNN.tflearn')
+  model.load('{}/model.tfl'.format(datasetPath))
   print("    Weights loaded!")
   #Evaluate 2
   test_accuracy = model.evaluate(test_x, test_y)[0]
   print("[+] Test accuracy: {:.2%}".format(test_accuracy))
 
 
+
 # Load trained model, evaluate model and print test accuracy
 if "test" in args.mode:
+  print("[+] Test Neural Network")
+  test_x, test_y = getDataset(filesPerGenreMap, genres, mode="test")
+
+  print("[+] Loading weights...")
+  model.load('{}/model.tfl'.format(datasetPath))
+  print("    Weights loaded!")
+  #Evaluate 2
+  test_accuracy = model.evaluate(test_x, test_y)[0]
+  print("[+] Test accuracy: {:.2%}".format(test_accuracy))
+
+
+
+if "confusionmatrix" in args.mode:
   #Create or load new dataset
   test_x, test_y = getDataset(filesPerGenreMap, genres, mode="test")
 
@@ -103,7 +124,7 @@ if "test" in args.mode:
 
   #Load weights
   print("[+] Loading weights...")
-  model.load('musicDNN.tflearn')
+  model.load('{}/model.tfl'.format(datasetPath))
   print("    Weights loaded!")
 
   # Run the model on one example

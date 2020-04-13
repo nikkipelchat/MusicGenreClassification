@@ -2,12 +2,8 @@
 # pylint: disable=invalid-name
 # Define paths for files
 spectrogramsPath = "Data/Spectrograms/"
-spectrogramsPathToGreys = "Data/Spectrograms/Greys/"
-spectrogramsPathToBinary = "Data/Spectrograms/Binary/"
 slicesPath = "Data/Slices/"
-slicesPathToGreys = "Data/Slices/Greys/"
-slicesPathToBinary = "Data/Slices/Binary/"
-datasetPath = "Data/Dataset/"
+datasetPath = "DatasetAndCheckpoints/"
 rawDataPath = "Data/Raw/"
 
 # Spectrogram resolution
@@ -16,7 +12,7 @@ pixelPerSecond = 50
 # Slice parameters
 sliceXSize = 128
 sliceYSize = 128
-sliceZSize = 3
+sliceZSize = 1
 
 # Dataset parameters
 # filesPerGenreMap = { # uneven for cody's dataset to replicate mine

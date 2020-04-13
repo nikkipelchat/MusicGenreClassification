@@ -1,6 +1,5 @@
 # ignore any data we generate
 Data/
 __pycache__/
-musicDNN.tflearn.*
-checkpoint
+DatasetAndCheckpoints
 tensorboard

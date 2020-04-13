@@ -23,20 +23,23 @@ To run lint on all python files:
 pylint *.py
 ```
 
-To create the song slices (might be long):
-
+To create the song slices:
 ```
 python main.py slice
 ```
 
-To train the classifier (long too):
-
+To train the classifier:
 ```
 python main.py train
 ```
 
-To test the classifier (fast):
+To resume train the classifier:
+```
+python main.py train --resume <checkpointNumber> --epochs 15
+```
+This will pickup training from a checkpoint file in the folder /DatasetAndCheckpoint and train for 15 epochs
 
+To test the classifier:
 ```
 python main.py test
 ```
