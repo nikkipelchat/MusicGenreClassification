@@ -37,7 +37,7 @@ def getDataset(nbPerGenreMap, genres, mode):
 
 def loadDataset(mode):
   '''Loads datset. Mode = `train` or `test`'''
-  #Load existing
+  # Load existing
   datasetName = getDatasetName()
   if mode == "train":
     print("[+] Loading training and validation datasets... ")
@@ -48,15 +48,23 @@ def loadDataset(mode):
     print("    Training and validation datasets loaded!")
     return trainX, trainY, validationX, validationY
 
-  # mode == "test"
+  if mode == "test":
+    print("[+] Loading testing dataset... ")
+    testX = pickle.load(open("{}testX_{}.p".format(datasetPath, datasetName), "rb"))
+    testY = pickle.load(open("{}testY_{}.p".format(datasetPath, datasetName), "rb"))
+    print("    Testing dataset loaded!")
+    return testX, testY
+
+  # mode == "vote"
   print("[+] Loading testing dataset... ")
   testX = pickle.load(open("{}testX_{}.p".format(datasetPath, datasetName), "rb"))
   testY = pickle.load(open("{}testY_{}.p".format(datasetPath, datasetName), "rb"))
+  songTitlesForVotes = pickle.load(open("{}songTitlesForVotes_{}.p".format(datasetPath, datasetName), "rb"))
   print("    Testing dataset loaded!")
-  return testX, testY
+  return testX, testY, songTitlesForVotes
 
 
-def saveDataset(trainX, trainY, validationX, validationY, testX, testY):
+def saveDataset(trainX, trainY, validationX, validationY, testX, testY, songTitlesForVotes):
   '''Saves dataset'''
   createFolder(datasetPath)
 
@@ -69,6 +77,7 @@ def saveDataset(trainX, trainY, validationX, validationY, testX, testY):
   pickle.dump(validationY, open("{}validationY_{}.p".format(datasetPath, datasetName), "wb"), protocol=4)
   pickle.dump(testX, open("{}testX_{}.p".format(datasetPath, datasetName), "wb"), protocol=4)
   pickle.dump(testY, open("{}testY_{}.p".format(datasetPath, datasetName), "wb"), protocol=4)
+  pickle.dump(songTitlesForVotes, open("{}songTitlesForVotes_{}.p".format(datasetPath, datasetName), "wb"), protocol=4)
   print("    Dataset saved!")
 
 
@@ -101,17 +110,19 @@ def addDataArraysToDataset(trainingFilenames, validationFilenames, testFilenames
   '''Take arrays of file names and put them into correct section of dataset'''
   # Add data (X,Y)
   for validationFilename in validationFilenames:
-    imgData = getImageData(slicesPath+genre + "/" + validationFilename, sliceXSize, sliceYSize, sliceZSize)
+    imgData = getImageData(slicesPath + genre + "/" + validationFilename, sliceXSize, sliceYSize, sliceZSize)
     label = [1. if genre == g else 0. for g in genres]
     validationData.append((imgData, label))
 
   for testFilename in testFilenames:
-    imgData = getImageData(slicesPath+genre + "/" + testFilename, sliceXSize, sliceYSize, sliceZSize)
+    imgData = getImageData(slicesPath + genre + "/" + testFilename, sliceXSize, sliceYSize, sliceZSize)
     label = [1. if genre == g else 0. for g in genres]
-    testingData.append((imgData, label))
+    # add test file name for voting system later
+    songNameWithoutSlices = testFilename.replace('.png', '')[:(testFilename.rfind('_'))] 
+    testingData.append((imgData, label, songNameWithoutSlices))
 
   for trainingFilename in trainingFilenames:
-    imgData = getImageData(slicesPath+genre + "/" + trainingFilename, sliceXSize, sliceYSize, sliceZSize)
+    imgData = getImageData(slicesPath + genre + "/" + trainingFilename, sliceXSize, sliceYSize, sliceZSize)
     label = [1. if genre == g else 0. for g in genres]
     trainingData.append((imgData, label))
 
@@ -123,7 +134,7 @@ def getDataForDataset(nbPerGenreMap, genres):
   testingData = []
 
   for genre in genres:
-    #Get slices in genre subfolder
+    # Get slices in genre subfolder
     filenames = os.listdir(slicesPath+genre)
     filenames = [filename for filename in filenames if filename.endswith('.png')]
 
@@ -153,7 +164,7 @@ def createDataset(nbPerGenreMap, genres):
   '''Creates and save dataset from slices'''
   trainingData, validationData, testingData = getDataForDataset(nbPerGenreMap, genres)
 
-  #Shuffle data
+  # Shuffle data
   shuffle(validationData)
   shuffle(testingData)
   shuffle(trainingData)
@@ -162,21 +173,23 @@ def createDataset(nbPerGenreMap, genres):
   print("Total dataset {}".format(len(trainingData) + len(validationData) + len(testingData)))
   print("Split up into Training: {};  Validation: {};  Test: {};".format(len(trainingData), len(validationData), len(testingData)))
 
-  #Extract X and y
+  # Extract X and y
   validateX, validateY = zip(*validationData)
-  testX, testY = zip(*testingData)
+  testX, testY, songTitlesForVotes = zip(*testingData)
   trainX, trainY = zip(*trainingData)
 
-  #Prepare for Tflearn
+  # Prepare for Tflearn
   trainX = np.array(trainX).reshape([-1, sliceXSize, sliceYSize, sliceZSize]) # images/data
   trainY = np.array(trainY) # labels
   validationX = np.array(validateX).reshape([-1, sliceXSize, sliceYSize, sliceZSize]) # images/data
   validationY = np.array(validateY) # labels
   testX = np.array(testX).reshape([-1, sliceXSize, sliceYSize, sliceZSize]) # images/data
   testY = np.array(testY) # labels
+  songTitlesForVotes = np.array(songTitlesForVotes) # songTitles
+
   print("    Dataset created!")
 
-  #Save
-  saveDataset(trainX, trainY, validationX, validationY, testX, testY)
+  # Save
+  saveDataset(trainX, trainY, validationX, validationY, testX, testY, songTitlesForVotes)
 
-  return trainX, trainY, validationX, validationY, testX, testY
+  return trainX, trainY, validationX, validationY, testX, testY, songTitlesForVotes

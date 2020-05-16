@@ -8,7 +8,12 @@ def createSlicesFromSpectrograms(spectrogramsPath, slicesPath, sliceXSize, slice
   '''Slices all spectrograms'''
   for filename in os.listdir(spectrogramsPath):
     if filename.endswith(".png"):
-      sliceSpectrogram(filename, spectrogramsPath, slicesPath, sliceXSize, sliceYSize)
+      try:
+        sliceSpectrogram(filename, spectrogramsPath, slicesPath, sliceXSize, sliceYSize)
+      except KeyboardInterrupt:
+        raise
+      except:
+        print("Couldn't create slices for {}".format(filename))
 
 
 def sliceSpectrogram(filename, spectrogramPath, slicesPath, sliceXSize, sliceYSize):

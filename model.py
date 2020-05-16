@@ -11,7 +11,7 @@ from keras.layers import MaxPooling2D, Conv2D, ZeroPadding2D
 from keras.models import Sequential
 from keras.optimizers import rmsprop
 
-from config import checkpointPath
+from config import checkpointPath, learningRate
 from imageFilesTools import createFolder
 
 def createModelUsingTensorflow(nbClasses, imageSizeX, imageSizeY, imageSizeZ, args):
@@ -41,7 +41,7 @@ def createModelUsingTensorflow(nbClasses, imageSizeX, imageSizeY, imageSizeZ, ar
   convnet = dropout(convnet, 0.5)
 
   convnet = fully_connected(convnet, nbClasses, activation='softmax')
-  convnet = regression(convnet, optimizer='adam', loss='categorical_crossentropy')
+  convnet = regression(convnet, optimizer='adam', loss='categorical_crossentropy', learning_rate=learningRate)
 
   # model = tflearn.DNN(convnet, tensorboard_dir='tensorboard', tensorboard_verbose=3)
   createFolder(checkpointPath)
