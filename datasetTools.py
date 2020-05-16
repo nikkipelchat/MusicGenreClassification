@@ -118,7 +118,7 @@ def addDataArraysToDataset(trainingFilenames, validationFilenames, testFilenames
     imgData = getImageData(slicesPath + genre + "/" + testFilename, sliceXSize, sliceYSize, sliceZSize)
     label = [1. if genre == g else 0. for g in genres]
     # add test file name for voting system later
-    songNameWithoutSlices = testFilename.replace('.png', '')[:(testFilename.rfind('_'))] 
+    songNameWithoutSlices = testFilename.replace('.png', '')[:(testFilename.rfind('_'))]
     testingData.append((imgData, label, songNameWithoutSlices))
 
   for trainingFilename in trainingFilenames:

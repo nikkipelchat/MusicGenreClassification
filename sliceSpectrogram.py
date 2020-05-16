@@ -12,7 +12,7 @@ def createSlicesFromSpectrograms(spectrogramsPath, slicesPath, sliceXSize, slice
         sliceSpectrogram(filename, spectrogramsPath, slicesPath, sliceXSize, sliceYSize)
       except KeyboardInterrupt:
         raise
-      except:
+      except: # pylint: disable=W0702
         print("Couldn't create slices for {}".format(filename))
 
 

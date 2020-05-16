@@ -1,4 +1,5 @@
 '''Create spectrograms and slices from audio files'''
+# pylint: disable=C0103
 from subprocess import Popen, PIPE, STDOUT
 import os
 import sys
@@ -44,10 +45,9 @@ def createMelSpectrogramLibrosa(filename, newFilename):
       # Create Spectrogram
       y, sr = librosa.load(rawDataPath+filename, sr=44100, mono=True, offset=20) # offset 20 trims 20 seconds off the start of the song
       ps = librosa.feature.melspectrogram(y=y, sr=sr, window='hamming')
-      ''' Same thing as line above
-        D = np.abs(librosa.stft(y)) # power spectrogram
-        ps = librosa.feature.melspectrogram(S=D, sr=sr, window='hamming')
-      '''
+      # Same thing as line above
+      #   D = np.abs(librosa.stft(y)) # power spectrogram
+      #   ps = librosa.feature.melspectrogram(S=D, sr=sr, window='hamming')
       power = librosa.power_to_db(ps, ref=np.max)
 
       height, width = power.shape # height = 128, width depends on song length
@@ -63,7 +63,7 @@ def createMelSpectrogramLibrosa(filename, newFilename):
 
     except KeyboardInterrupt:
       raise
-    except:
+    except: # pylint: disable=W0702
       print("Couldn't create spectrogram(s) for {}".format(filename))
       print("Error: {}".format(sys.exc_info()[0]))
 
@@ -103,7 +103,7 @@ def createLinearOrLogSpectrogramLibrosa(filename, newFilename):
 
     except KeyboardInterrupt:
       raise
-    except:
+    except: # pylint: disable=W0702
       print("Couldn't create spectrogram(s) for {}".format(filename))
       print("Error: {}".format(sys.exc_info()[0]))
 
@@ -137,7 +137,7 @@ def createMFCCPlotLibrosa(filename, newFilename):
 
     except KeyboardInterrupt:
       raise
-    except:
+    except: # pylint: disable=W0702
       print("Couldn't create spectrogram(s) for {}".format(filename))
       print("Error: {}".format(sys.exc_info()[0]))
 

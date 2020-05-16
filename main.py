@@ -120,16 +120,16 @@ if "confusionmatrix" in args.mode:
   model.load('{}/model.tfl'.format(checkpointPath))
 
   # Confusion Matrix
-  chunkSize = 1000
+  chunk_size = 1000
   actual_classes = test_y
-  predictionsArray = np.empty([0, number_of_classes])
-  for i in range(0, len(test_x), chunkSize):
-    testXChunk = test_x[i:i+chunkSize]
-    predictionChunk = model.predict(testXChunk)
-    predictionsArray = np.concatenate((predictionsArray, predictionChunk))
-  
+  predictions_array = np.empty([0, number_of_classes])
+  for i in range(0, len(test_x), chunk_size):
+    test_x_chunk = test_x[i:i+chunk_size]
+    prediction_chunk = model.predict(test_x_chunk)
+    predictions_array = np.concatenate((predictions_array, prediction_chunk))
+
   labels = tf.argmax(actual_classes, 1)
-  predictions = tf.argmax(predictionsArray, 1)
+  predictions = tf.argmax(predictions_array, 1)
 
   confusion_matrix = tf.confusion_matrix(labels=labels, predictions=predictions)
   with tf.Session():
@@ -147,18 +147,18 @@ if "vote" in args.mode:
   # Load weights
   model.load('{}/model.tfl'.format(checkpointPath))
 
-  songPredictionTotals = {}
-  songActualClassDict = {}
+  song_prediction_totals = {}
+  song_actual_class_dict = {}
   accuracy = 0
-  voteAccuracy = 0
+  vote_accuracy = 0
 
-  chunkSize = 1000
+  chunk_size = 1000
 
   # Evaluate accuracy and create dictionary of how often slices within 1 song are accurate
-  for i in range(0, len(song_titles_for_votes), chunkSize):
-    testXChunk = test_x[i:i+chunkSize]
-    testYChunk = test_y[i:i+chunkSize]
-    songTitlesForVotesChunk = song_titles_for_votes[i:i+chunkSize]
+  for i in range(0, len(song_titles_for_votes), chunk_size):
+    testXChunk = test_x[i:i+chunk_size]
+    testYChunk = test_y[i:i+chunk_size]
+    songTitlesForVotesChunk = song_titles_for_votes[i:i+chunk_size]
 
     predictionChunk = model.predict(testXChunk)
 
@@ -166,29 +166,29 @@ if "vote" in args.mode:
       predicted_class_for_slice = np.argmax(prediction)
       actual_class_for_slice = np.argmax(actual)
 
-      if not songPredictionTotals.get(songName):
-        songPredictionTotals[songName] = {}
-      if not songPredictionTotals[songName].get(predicted_class_for_slice):
-        songPredictionTotals[songName][predicted_class_for_slice] = 0 # to keep the total number of predictions for this class 
+      if not song_prediction_totals.get(songName):
+        song_prediction_totals[songName] = {}
+      if not song_prediction_totals[songName].get(predicted_class_for_slice):
+        song_prediction_totals[songName][predicted_class_for_slice] = 0 # to keep the total number of predictions for this class
 
-      songPredictionTotals[songName][predicted_class_for_slice] += 1
-      songActualClassDict[songName] = actual_class_for_slice
+      song_prediction_totals[songName][predicted_class_for_slice] += 1
+      song_actual_class_dict[songName] = actual_class_for_slice
 
-      if (predicted_class_for_slice == actual_class_for_slice):
+      if predicted_class_for_slice == actual_class_for_slice:
         accuracy += 1
 
   # Extract vote accuracy
-  for songName, songNameItems in songPredictionTotals.items():
+  for songName, songNameItems in song_prediction_totals.items():
     most_predicted_class_for_song = max(songNameItems, key=lambda key: songNameItems[key])
-    actual_class_for_song = songActualClassDict[songName]
-    if (most_predicted_class_for_song == actual_class_for_song):
-      voteAccuracy += 1
+    actual_class_for_song = song_actual_class_dict[songName]
+    if most_predicted_class_for_song == actual_class_for_song:
+      vote_accuracy += 1
 
   accuracy = accuracy / len(test_y)
   print("[+] Calculated Test accuracy: {:.2%}".format(accuracy))
 
-  voteAccuracy = voteAccuracy / len(songPredictionTotals)
-  print("[+] Calculated Voted Test accuracy: {:.2%}".format(voteAccuracy))
+  vote_accuracy = vote_accuracy / len(song_prediction_totals)
+  print("[+] Calculated Voted Test accuracy: {:.2%}".format(vote_accuracy))
 
   # Evaluate
   test_accuracy = model.evaluate(test_x, test_y)[0]
