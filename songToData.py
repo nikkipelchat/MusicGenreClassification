@@ -31,130 +31,121 @@ current_path = os.path.dirname(os.path.realpath(__file__))
 # Remove logs
 eyed3.log.setLevel("ERROR")
 
-def createSpectrogramMelScale(filename, newFilename):
+def createMelSpectrogramLibrosa(filename, newFilename):
   '''Create a mel scale spectrogram'''
-  # Set up graph
-  plt.axis('off')
+  # IF statement allows creating spectrograms to resume if the task failed
+  if os.path.exists(spectrogramsPath+newFilename+'.png'):
+    print("Spectrogram ", spectrogramsPath+newFilename, " already exists.")
+  else:
+    # Set up graph
+    plt.axis('off')
 
-  try:
-    # Create Spectrogram
-    y, sr = librosa.load(rawDataPath+filename, sr=22050, mono=True, offset=20) # offset 20 trims 20 seconds off the start of the song
-    ps = librosa.feature.melspectrogram(y=y, sr=sr, window='hamming')
-    height, width = ps.shape
-    heigthOfSpec = round(height/100, 2)
-    widthOfSpec = round((width*1.16075)/100, 2)
+    try:
+      # Create Spectrogram
+      y, sr = librosa.load(rawDataPath+filename, sr=44100, mono=True, offset=20) # offset 20 trims 20 seconds off the start of the song
+      ps = librosa.feature.melspectrogram(y=y, sr=sr, window='hamming')
+      ''' Same thing as line above
+        D = np.abs(librosa.stft(y)) # power spectrogram
+        ps = librosa.feature.melspectrogram(S=D, sr=sr, window='hamming')
+      '''
+      power = librosa.power_to_db(ps, ref=np.max)
 
-    plt.figure(figsize=(widthOfSpec, heigthOfSpec))
-    plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
+      height, width = power.shape # height = 128, width depends on song length
+      heightOfSpec = round(height/100, 2)
+      widthOfSpec = round((width*0.58045)/100, 2) # sr=22050 -> 1.16075; sr=44100 -> 0.58045
 
-    # Display Spectrogram
-    power = librosa.power_to_db(ps, ref=np.max)
-    # to see amplitude it would be S**2 https://librosa.github.io/librosa/generated/librosa.core.amplitude_to_db.html
-    amplitude = librosa.power_to_db(ps**2, ref=np.max)
-    mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=40)
+      plt.figure(figsize=(widthOfSpec, heightOfSpec))
+      plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
 
-    # binary mel
-    # librosa.display.specshow(power, sr=sr, cmap='binary', x_axis='time', y_axis='mel')
-    # plt.savefig('{}'.format(spectrogramsPath+newFilename), bbox_inches=None, pad_inches=0)
-    # librosa.display.specshow(amplitude, sr=sr, cmap='binary', x_axis='time', y_axis='mel')
-    # plt.savefig('{}'.format(spectrogramsPathToMelAmplitude+newFilename), bbox_inches=None, pad_inches=0)
+      # binary mel
+      librosa.display.specshow(power, sr=sr, cmap='binary', x_axis='time', y_axis='mel', fmax=sr/2) # need fmax for mel scale
+      plt.savefig('{}'.format(spectrogramsPath+newFilename), bbox_inches=None, pad_inches=0)
 
-    # greys mel
-    # librosa.display.specshow(librosa.power_to_db(ps, ref=np.max), sr=sr, cmap='Greys', x_axis='time', y_axis='mel')
-    # plt.savefig('{}'.format(spectrogramsPathToGreys+newFilename), bbox_inches=None, pad_inches=0)
+    except KeyboardInterrupt:
+      raise
+    except:
+      print("Couldn't create spectrogram(s) for {}".format(filename))
+      print("Error: {}".format(sys.exc_info()[0]))
 
-    # colored mel
-    librosa.display.specshow(librosa.power_to_db(ps, ref=np.max), sr=sr, x_axis='time', y_axis='mel')
-    plt.savefig('{}'.format(spectrogramsPath+newFilename), bbox_inches=None, pad_inches=0)
-
-    # binary log
-    # librosa.display.specshow(power, sr=sr, cmap='binary', x_axis='time', y_axis='log')
-    # plt.savefig('{}'.format(spectrogramsPathToLogPower+newFilename), bbox_inches=None, pad_inches=0)
-    # librosa.display.specshow(amplitude, sr=sr, cmap='binary', x_axis='time', y_axis='log')
-    # plt.savefig('{}'.format(spectrogramsPathToLogAmplitude+newFilename), bbox_inches=None, pad_inches=0)
-
-    # binary linear
-    # librosa.display.specshow(power, sr=sr, cmap='binary', x_axis='time')
-    # plt.savefig('{}'.format(spectrogramsPathToLinearPower+newFilename), bbox_inches=None, pad_inches=0)
-    # librosa.display.specshow(amplitude, sr=sr, cmap='binary', x_axis='time')
-    # plt.savefig('{}'.format(spectrogramsPathToLinearAmplitude+newFilename), bbox_inches=None, pad_inches=0)
-
-    # binary mfcc
-    # librosa.display.specshow(mfccs, cmap='binary', x_axis='time', y_axis='linear')
-    # plt.savefig('{}'.format(spectrogramsPathToMFCCLinear+newFilename), bbox_inches=None, pad_inches=0)
-    # librosa.display.specshow(mfccs, cmap='binary', x_axis='time')
-    # plt.savefig('{}'.format(spectrogramsPathToMFCC+newFilename), bbox_inches=None, pad_inches=0)
-
-  except KeyboardInterrupt:
-    raise
-  except:
-    print("Couldn't create spectrogram(s) for {}".format(filename))
-
-  # Save Spectrogram
-  plt.close()
+    # Save Spectrogram
+    plt.close()
 
 
-def createMFCC(filename, newFilename):
-  '''Create an MFCC spectrogram'''
-  # Set up graph
-  plt.axis('off')
-  plt.figure(figsize=(80, 1.28))
-  plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
+def createLinearOrLogSpectrogramLibrosa(filename, newFilename):
+  '''Create a linear and logarithmic scale spectrogram'''
+  # IF statement allows creating spectrograms to resume if the task failed
+  if os.path.exists(spectrogramsPath+newFilename+'.png'):
+    print("Spectrogram ", spectrogramsPath+newFilename, " already exists.")
+  else:
+    # Set up graph
+    plt.axis('off')
 
-  try:
-    # Create Spectrogram
-    y, sr = librosa.load(rawDataPath+filename, sr=22050, mono=True)
-    mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=40)
+    try:
+      # Create Spectrogram
+      y, sr = librosa.load(rawDataPath+filename, sr=44100, mono=True, offset=20) # offset 20 -> trims 20 seconds off the start of the song
+      D = np.abs(librosa.stft(y)) # power spectrogram
+      S = librosa.power_to_db(D**2, ref=np.max) # spectrogram for linear or logithmic
 
-    # Display Spectrogram
-    librosa.display.specshow(mfccs, x_axis='time', cmap='binary')
-    # librosa.display.specshow(librosa.power_to_db(ps, ref=np.max), sr=sr, x_axis='time', y_axis='mel')
-  except KeyboardInterrupt:
-    raise
-  except:
-    print("Couldn't create MFCC for {}".format(filename))
+      height, width = S.shape # height = 1025, width depends on song length
+      heightOfSpec = round((height*0.12585)/100, 2)
+      widthOfSpec = round((width*0.58045)/100, 2)
 
-  # Save Spectrogram
-  plt.savefig('{}'.format(spectrogramsPath+newFilename), bbox_inches=None, pad_inches=0)
-  plt.close()
+      plt.figure(figsize=(widthOfSpec, heightOfSpec))
+      plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
 
+      # binary linear
+      # librosa.display.specshow(S, sr=sr, cmap='binary', x_axis='time', y_axis='linear') # need to load at 44100
+      # plt.savefig('{}'.format(spectrogramsPath+newFilename), bbox_inches=None, pad_inches=0)
 
-def createSpectrogramLibrosaSpectrogram(filename, newFilename):
-  '''Create a spectrogram using Librosa Library'''
-  # Set up graph
-  plt.axis('off')
-  plt.figure(figsize=(80, 1.28))
-  plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
+      # binary logarithmic
+      librosa.display.specshow(S, sr=sr, cmap='binary', x_axis='time', y_axis='log') # need to load at 44100
+      plt.savefig('{}'.format(spectrogramsPath+newFilename), bbox_inches=None, pad_inches=0)
 
-  try:
-    # Create Spectrogram
-    y, sr = librosa.load(rawDataPath+filename, sr=22050, mono=True)
-    # D = librosa.stft(y)
-    # S = np.abs(librosa.stft(y))
-    # db_to_amplitude(S, )
-    # magnitude, phase = librosa.magphase(D)
+    except KeyboardInterrupt:
+      raise
+    except:
+      print("Couldn't create spectrogram(s) for {}".format(filename))
+      print("Error: {}".format(sys.exc_info()[0]))
 
-    mfcc = librosa.feature.mfcc(y=y, sr=sr)
-    # S=librosa.power_to_db(S)
-    # ps = librosa.feature.melspectrogram(y=y, sr=sr)
-
-    # Display Spectrogram
-    # librosa.display.specshow(librosa.power_to_db(S**2, ref=np.max), sr=sr, cmap='gray_r', x_axis='time', y_axis='linear')
-    # librosa.display.specshow(librosa.power_to_db(ps, ref=np.median), sr=sr, cmap='gray_r', x_axis='time', y_axis='linear')
-    librosa.display.specshow(mfcc, cmap='gray_r', x_axis='time')
-
-  except KeyboardInterrupt:
-    print("Keyboard Interruption")
-    raise
-  except:
-    print("Couldn't create spectrogram for {}".format(filename))
-
-  # Save Spectrogram
-  plt.savefig('{}'.format(spectrogramsPath+newFilename), bbox_inches=None, pad_inches=0)
-  plt.close()
+    # Save Spectrogram
+    plt.close()
 
 
-def createSpectrogramSox(filename, newFilename):
+def createMFCCPlotLibrosa(filename, newFilename):
+  '''Create a plot of MFCC co-efficents'''
+  # IF statement allows creating spectrograms to resume if the task failed
+  if os.path.exists(spectrogramsPath+newFilename+'.png'):
+    print("Spectrogram ", spectrogramsPath+newFilename, " already exists.")
+  else:
+    # Set up graph
+    plt.axis('off')
+
+    try:
+      # Create Spectrogram
+      y, sr = librosa.load(rawDataPath+filename, sr=44100, mono=True, offset=20) # offset 20 trims 20 seconds off the start of the song
+      mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=128)
+      height, width = mfccs.shape
+      heightOfSpec = round(height/100, 2)
+      widthOfSpec = round((width*0.58045)/100, 2)
+
+      plt.figure(figsize=(widthOfSpec, heightOfSpec)) # this might not be the width/height we want, it was from creating a spectrogram
+      plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
+
+      # binary mfcc
+      librosa.display.specshow(mfccs, cmap='binary', x_axis='time')
+      plt.savefig('{}'.format(spectrogramsPath+newFilename), bbox_inches=None, pad_inches=0)
+
+    except KeyboardInterrupt:
+      raise
+    except:
+      print("Couldn't create spectrogram(s) for {}".format(filename))
+      print("Error: {}".format(sys.exc_info()[0]))
+
+    # Save Spectrogram
+    plt.close()
+
+
+def createLinearSpectrogramSox(filename, newFilename):
   '''Create spectrogram from mp3 files'''
   # Create temporary mono track if needed
   if isMono(rawDataPath + filename):
@@ -199,7 +190,7 @@ def createSpectrogramsFromAudio():
     os.rename(rawDataPath+filename, rawDataPath+re.sub('[^A-Za-z0-9. ]+', '', filename))
     filename = re.sub('[^A-Za-z0-9. ]+', '', filename)
 
-    print("Creating spectrogram for file {}/{}...  {}".format(index+1, nbFiles, filename))
+    print("Creating spectrogram(s) for file {}/{}...  {}".format(index+1, nbFiles, filename))
 
     fileGenre = getGenre(rawDataPath + filename)
     if fileGenre == 'Other':
@@ -207,10 +198,10 @@ def createSpectrogramsFromAudio():
     genresID[fileGenre] = genresID[fileGenre] + 1 if fileGenre in genresID else 1
     fileID = genresID[fileGenre]
     newFilename = fileGenre+"_"+str(fileID) # if fileGenre is byte then do this
-    createSpectrogramMelScale(filename, newFilename)
-    # createMFCC(filename, newFilename+"_mfcc")
-    # createSpectrogramLibrosaSpectrogram(filename, newFilename+"_librosa_spectrogram")
-    # createSpectrogramSox(filename, newFilename)
+    # createMelSpectrogramLibrosa(filename, newFilename)
+    # createMFCCPlotLibrosa(filename, newFilename)
+    createLinearOrLogSpectrogramLibrosa(filename, newFilename)
+    # createLinearSpectrogramSox(filename, newFilename)
 
 
 def createSlicesFromAudio():

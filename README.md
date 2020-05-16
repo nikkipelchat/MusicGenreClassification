@@ -17,7 +17,7 @@ tflearn
 - Place your labeled .mp3 files in Data/Raw/
 - All editable parameters are in the config.py file
 
-Avaiable Commands:
+Available Commands:
 
 ```
 # To run lint on all python files

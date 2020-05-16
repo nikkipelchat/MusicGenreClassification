@@ -2,6 +2,7 @@
 # pylint: disable=invalid-name
 # Define paths for files
 spectrogramsPath = "Data/Spectrograms/"
+
 slicesPath = "Data/Slices/"
 datasetPath = "Data/Dataset/"
 checkpointPath = "Checkpoints/"
