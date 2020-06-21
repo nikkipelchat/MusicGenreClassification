@@ -2,6 +2,9 @@
 # pylint: disable=invalid-name
 # Define paths for files
 spectrogramsPath = "Data/Spectrograms/"
+linearSpectrogramsPath = "Data/Spectrograms/Linear/"
+melSpectrogramsPath = "Data/Spectrograms/Mel/"
+logSpectrogramsPath = "Data/Spectrograms/Log/"
 
 slicesPath = "Data/Slices/"
 datasetPath = "Data/Dataset/"
@@ -52,10 +55,10 @@ filesPerGenreMap = { # even slicing for cody's dataset
 #    'Disco': 40000,
 #    'HipHop': 40000,
 #    'Jazz': 40000,
-#    'Rock': 40000,
-#    'Pop': 40000,
 #    'Metal': 40000,
-#    'Reggae': 40000,
+#    'Pop': 40000,
+#    'RBSoul': 40000,
+#    'Rock': 40000,
 # }
 ignoreGenres = ['Other', 'Soundtrack']
 validationRatio = 0.3

@@ -37,6 +37,12 @@ def getCategorizedGenre(genre):
     result = 'Country'
   elif genre in ('Classical', 'Classical Crossover'):
     result = 'Classical'
+  # elif genre in 'Disco':
+  #   result = 'Disco' # in GTZAN music
+  # elif genre in 'Metal':
+  #   result = 'Metal' # in GTZAN music
+  # elif genre in 'Jazz':
+  #   result = 'Jazz' # in GTZAN music
   # Being ignored
   elif genre in ('SingerSongwriter', 'Soundtrack', 'Vocal'):
     result = 'Soundtrack'

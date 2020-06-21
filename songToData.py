@@ -17,6 +17,7 @@ from audioFilesTools import isMono, getGenre
 from imageFilesTools import createFolder
 from config import rawDataPath
 from config import spectrogramsPath
+from config import melSpectrogramsPath, linearSpectrogramsPath, logSpectrogramsPath
 from config import slicesPath
 from config import pixelPerSecond
 from config import sliceXSize, sliceYSize
@@ -35,8 +36,8 @@ eyed3.log.setLevel("ERROR")
 def createMelSpectrogramLibrosa(filename, newFilename):
   '''Create a mel scale spectrogram'''
   # IF statement allows creating spectrograms to resume if the task failed
-  if os.path.exists(spectrogramsPath+newFilename+'.png'):
-    print("Spectrogram ", spectrogramsPath+newFilename, " already exists.")
+  if os.path.exists(melSpectrogramsPath+newFilename+'.png'):
+    print("Spectrogram ", melSpectrogramsPath+newFilename, " already exists.")
   else:
     # Set up graph
     plt.axis('off')
@@ -44,6 +45,7 @@ def createMelSpectrogramLibrosa(filename, newFilename):
     try:
       # Create Spectrogram
       y, sr = librosa.load(rawDataPath+filename, sr=44100, mono=True, offset=20) # offset 20 trims 20 seconds off the start of the song
+      # y, sr = librosa.load(rawDataPath+filename, sr=22050, mono=True, offset=20) # GTZAN
       ps = librosa.feature.melspectrogram(y=y, sr=sr, window='hamming')
       # Same thing as line above
       #   D = np.abs(librosa.stft(y)) # power spectrogram
@@ -52,14 +54,15 @@ def createMelSpectrogramLibrosa(filename, newFilename):
 
       height, width = power.shape # height = 128, width depends on song length
       heightOfSpec = round(height/100, 2)
-      widthOfSpec = round((width*0.58045)/100, 2) # sr=22050 -> 1.16075; sr=44100 -> 0.58045
+      widthOfSpec = round((width*0.58045)/100, 2) # Personal music
+      # widthOfSpec = round((width*1.16075)/100, 2) # GTZAN
 
       plt.figure(figsize=(widthOfSpec, heightOfSpec))
       plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
 
       # binary mel
       librosa.display.specshow(power, sr=sr, cmap='binary', x_axis='time', y_axis='mel', fmax=sr/2) # need fmax for mel scale
-      plt.savefig('{}'.format(spectrogramsPath+newFilename), bbox_inches=None, pad_inches=0)
+      plt.savefig('{}'.format(melSpectrogramsPath+newFilename), bbox_inches=None, pad_inches=0)
 
     except KeyboardInterrupt:
       raise
@@ -74,8 +77,8 @@ def createMelSpectrogramLibrosa(filename, newFilename):
 def createLinearOrLogSpectrogramLibrosa(filename, newFilename):
   '''Create a linear and logarithmic scale spectrogram'''
   # IF statement allows creating spectrograms to resume if the task failed
-  if os.path.exists(spectrogramsPath+newFilename+'.png'):
-    print("Spectrogram ", spectrogramsPath+newFilename, " already exists.")
+  if os.path.exists(logSpectrogramsPath+newFilename+'.png'):
+    print("Spectrogram ", logSpectrogramsPath+newFilename, " already exists.")
   else:
     # Set up graph
     plt.axis('off')
@@ -83,23 +86,25 @@ def createLinearOrLogSpectrogramLibrosa(filename, newFilename):
     try:
       # Create Spectrogram
       y, sr = librosa.load(rawDataPath+filename, sr=44100, mono=True, offset=20) # offset 20 -> trims 20 seconds off the start of the song
+      # y, sr = librosa.load(rawDataPath+filename, sr=22050, mono=True, offset=20) # GTZAN
       D = np.abs(librosa.stft(y)) # power spectrogram
       S = librosa.power_to_db(D**2, ref=np.max) # spectrogram for linear or logithmic
 
       height, width = S.shape # height = 1025, width depends on song length
       heightOfSpec = round((height*0.12585)/100, 2)
-      widthOfSpec = round((width*0.58045)/100, 2)
+      widthOfSpec = round((width*0.58045)/100, 2) # Personal music
+      # widthOfSpec = round((width*1.16075)/100, 2) # GTZAN
 
       plt.figure(figsize=(widthOfSpec, heightOfSpec))
       plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
 
       # binary linear
       # librosa.display.specshow(S, sr=sr, cmap='binary', x_axis='time', y_axis='linear') # need to load at 44100
-      # plt.savefig('{}'.format(spectrogramsPath+newFilename), bbox_inches=None, pad_inches=0)
+      # plt.savefig('{}'.format(linearSpectrogramsPath+newFilename), bbox_inches=None, pad_inches=0)
 
       # binary logarithmic
       librosa.display.specshow(S, sr=sr, cmap='binary', x_axis='time', y_axis='log') # need to load at 44100
-      plt.savefig('{}'.format(spectrogramsPath+newFilename), bbox_inches=None, pad_inches=0)
+      plt.savefig('{}'.format(logSpectrogramsPath+newFilename), bbox_inches=None, pad_inches=0)
 
     except KeyboardInterrupt:
       raise
@@ -162,7 +167,7 @@ def createLinearSpectrogramSox(filename, newFilename):
   filename.replace(".mp3", "")
   # trim 20 will cut 20 seconds off front of song
   command = 'sox "/tmp/{}.mp3" -n trim 20 spectrogram -w Hamming -Y 200 -X {} -m -r -o "{}.png"'.format(newFilename, \
-    pixelPerSecond, spectrogramsPath + newFilename)
+    pixelPerSecond, spectrogramsPath + newFilename) # -r removes axes
   process = Popen(command, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, cwd=current_path)
   # pylint: disable=unused-variable
   output, errors = process.communicate()
@@ -181,7 +186,9 @@ def createSpectrogramsFromAudio():
   nbFiles = len(files)
 
   # Create path if not existing
-  createFolder(spectrogramsPath)
+  createFolder(linearSpectrogramsPath)
+  createFolder(melSpectrogramsPath)
+  createFolder(logSpectrogramsPath)
 
   # Rename files according to genre
   for index, filename in enumerate(files):
@@ -198,7 +205,7 @@ def createSpectrogramsFromAudio():
     genresID[fileGenre] = genresID[fileGenre] + 1 if fileGenre in genresID else 1
     fileID = genresID[fileGenre]
     newFilename = fileGenre+"_"+str(fileID) # if fileGenre is byte then do this
-    # createMelSpectrogramLibrosa(filename, newFilename)
+    createMelSpectrogramLibrosa(filename, newFilename)
     # createMFCCPlotLibrosa(filename, newFilename)
     createLinearOrLogSpectrogramLibrosa(filename, newFilename)
     # createLinearSpectrogramSox(filename, newFilename)
