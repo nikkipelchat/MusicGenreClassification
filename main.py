@@ -45,8 +45,9 @@ all_genres = os.listdir(slicesPath)
 all_genres = [filename for filename in all_genres if os.path.isdir(slicesPath+filename)]
 set_of_all_genres = set(all_genres)
 set_of_genres_to_ignore = set(ignoreGenres)
-# Genres to use
-genres = set_of_all_genres - set_of_genres_to_ignore
+genres = set_of_all_genres - set_of_genres_to_ignore # get genres to use
+genres = list(genres) # convert back to a list
+genres.sort()
 print("| Genres: {}".format(genres))
 number_of_classes = len(genres)
 

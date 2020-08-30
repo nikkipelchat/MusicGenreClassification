@@ -13,14 +13,20 @@ def getProcessedData(img, imageSizeX, imageSizeY, imageSizeZ):
 
 def getImageData(filename, imageSizeX, imageSizeY, imageSizeZ):
   '''Returns numpy image at size X*Y*Z'''
-  conversionType = 'L' # 8-bit pixels, black and white
-  if imageSizeZ == 3:
-    conversionType = 'RGB' # 3x8-bit pixels, true color
-  elif imageSizeZ == 4:
-    conversionType = 'RGBA' # 4x8-bit pixels, true color with transparency mask
-  img = Image.open(filename).convert(conversionType)
-  imgData = getProcessedData(img, imageSizeX, imageSizeY, imageSizeZ)
-  return imgData
+  try:
+    conversionType = 'L' # 8-bit pixels, black and white
+    if imageSizeZ == 3:
+      conversionType = 'RGB' # 3x8-bit pixels, true color
+    elif imageSizeZ == 4:
+      conversionType = 'RGBA' # 4x8-bit pixels, true color with transparency mask
+    img = Image.open(filename).convert(conversionType)
+    imgData = getProcessedData(img, imageSizeX, imageSizeY, imageSizeZ)
+    return imgData
+  except KeyboardInterrupt:
+    raise
+  except: # pylint: disable=W0702
+    print("Couldn't load image: {}".format(filename))
+    raise
 
 
 def createFolder(folderName):
